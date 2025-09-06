@@ -1,0 +1,5 @@
+qdrant_client
+huggingface_hub
+datasets==3.6.0
+exif
+"qdrant-client[fastembed]>=1.14.2"
