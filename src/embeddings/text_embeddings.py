@@ -250,7 +250,7 @@ if __name__ == "__main__":
 
     print("Collections:", client.get_collections())
 
-    jsonl_file_path = "datasets/dummy_tweets_data.jsonl"
+    jsonl_file_path = "datasets/text_coordinates_regions.jsonl"
     documents, metadata = load_jsonl_tweets(jsonl_file_path)
     print(f"Loaded {len(documents)} tweets.")
     if documents:
