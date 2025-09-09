@@ -6,13 +6,15 @@ from mistralai import Mistral
 from qdrant_client import QdrantClient
 from fastembed import TextEmbedding
 from src.embeddings.text_embeddings import hybrid_search
-
+from langchain.chat_models import init_chat_model
 # ------------------------------
 # 1️⃣ Load API key and initialize Mistral
 # ------------------------------
 load_dotenv()
 api_key = os.getenv("MISTRAL_API_KEY")
 client_llm = Mistral(api_key=api_key)
+
+openai_model = init_chat_model("gpt-4o-mini", model_provider="openai")
 
 QDRANT_URL = os.getenv("QDRANT_URL")
 API_KEY = os.getenv("QDRANT_API_KEY")
@@ -36,10 +38,22 @@ def get_text_embedding(text: str) -> np.ndarray:
 # ------------------------------
 # 5️⃣ Prepare context for LLM
 # ------------------------------
-def prepare_context_text(results):
+def prepare_context_text(results) -> str:
     if not results:
         return "No tweets found nearby."
-    return results
+
+    if isinstance(results, list):
+        # Case where text_query was provided, results is a list of tweet dicts
+        return "\n".join([item.get("document", "") for item in results])
+    elif isinstance(results, dict):
+        # Case where text_query was None, results is a dict with 'nearest_by_location' and 'similar_texts_by_vector'
+        all_tweets = []
+        if "similar_texts_by_vector" in results and results["similar_texts_by_vector"]:
+            all_tweets.extend([item.get("document", "") for item in results["similar_texts_by_vector"]])
+        if "nearest_by_location" in results and results["nearest_by_location"]:
+            all_tweets.extend([item.get("document", "") for item in results["nearest_by_location"]])
+        return "\n".join(all_tweets)
+    return "No tweets found nearby."
 
 # ------------------------------
 # 6️⃣ Refined JSON prompt
@@ -64,10 +78,14 @@ Tweets context:
 # ------------------------------
 # 7️⃣ Run Mistral LLM
 # ------------------------------
-def run_mistral_json(prompt_text: str, context_text: str, model="mistral-large-latest") -> dict:
-    messages = [{"role": "user", "content": prompt_text}]
-    chat_response = client_llm.chat.complete(model=model, messages=messages)
-    response_text = chat_response.choices[0].message.content.strip()
+def get_llm_response(prompt_text: str, context_text: str, model="mistral-large-latest") -> dict:
+    try:
+        messages = [{"role": "user", "content": prompt_text}]
+        chat_response = client_llm.chat.complete(model=model, messages=messages)
+        response_text = chat_response.choices[0].message.content.strip()
+    except Exception as e:
+        # 🔹 Fallback to OpenAI via LangChain
+        response_text = openai_model.invoke(prompt_text).content.strip()
 
     # 🔥 Clean up if response is wrapped in ```json ... ```
     if response_text.startswith("```"):
@@ -82,10 +100,8 @@ def run_mistral_json(prompt_text: str, context_text: str, model="mistral-large-l
         parsed_output = {"description": response_text, "emoji_text": ""}
 
     # ✅ Attach context text
-    return {
-        "context_text": context_text,
-        "summary": parsed_output
-    }
+    return parsed_output
+
 
 
 # ------------------------------

@@ -5,7 +5,7 @@ from src.main import (
     hybrid_search,
     build_prompt,
     prepare_context_text,
-    run_mistral_json
+    get_llm_response
 )
 from qdrant_client import QdrantClient
 
@@ -22,6 +22,18 @@ qdrant_client = QdrantClient(url=QDRANT_URL, api_key=API_KEY)
 
 # FastAPI app
 app = FastAPI(title="Tweet Classification API")
+
+def extract_documents(results):
+    if isinstance(results, dict):
+        # Path B: results is a dict with 2 lists
+        docs = [item["document"] for item in results.get("nearest_by_location", [])]
+        docs += [item["document"] for item in results.get("similar_texts_by_vector", [])]
+        return docs
+    elif isinstance(results, list):
+        # Path A: results is already a list of dicts
+        return [item["document"] for item in results]
+    else:
+        return []
 
 
 @app.get("/", tags=["Root"])
@@ -55,13 +67,17 @@ def search_tweets(
         radius_km=radius_km
     )
 
+    tweets = extract_documents(results)
     # Step 2: Extract context (make sure `results` contains text or format accordingly)
-    context_text = prepare_context_text(results)
+    context_text = results
 
     # Step 3: Build prompt for Mistral
     prompt = build_prompt(context_text)
 
     # Step 4: Get structured JSON response from Mistral
-    result = run_mistral_json(prompt, context_text)
+    result = get_llm_response(prompt, context_text)
 
-    return result
+    return {
+    "tweets": tweets,
+    "summary":result
+    }
