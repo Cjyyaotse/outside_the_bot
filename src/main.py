@@ -36,12 +36,11 @@ def get_text_embedding(text: str) -> np.ndarray:
 # ------------------------------
 # 5️⃣ Prepare context for LLM
 # ------------------------------
-'''
 def prepare_context_text(results):
     if not results:
         return "No tweets found nearby."
-    return "\n".join([point.payload.get("document", "") for point in results])
-'''
+    return results
+
 # ------------------------------
 # 6️⃣ Refined JSON prompt
 # ------------------------------
@@ -65,7 +64,7 @@ Tweets context:
 # ------------------------------
 # 7️⃣ Run Mistral LLM
 # ------------------------------
-def run_mistral_json(prompt_text: str, model="mistral-large-latest") -> dict:
+def run_mistral_json(prompt_text: str, context_text: str, model="mistral-large-latest") -> dict:
     messages = [{"role": "user", "content": prompt_text}]
     chat_response = client_llm.chat.complete(model=model, messages=messages)
     response_text = chat_response.choices[0].message.content.strip()
@@ -78,16 +77,21 @@ def run_mistral_json(prompt_text: str, model="mistral-large-latest") -> dict:
         response_text = response_text.strip()
 
     try:
-        return json.loads(response_text)
+        parsed_output = json.loads(response_text)
     except json.JSONDecodeError:
-        # fallback if LLM output is not strict JSON
-        return {"description": response_text, "emoji_text": ""}
+        parsed_output = {"description": response_text, "emoji_text": ""}
+
+    # ✅ Attach context text
+    return {
+        "context_text": context_text,
+        "summary": parsed_output
+    }
 
 
 # ------------------------------
 # 8️⃣ Example usage
 # ------------------------------
-if __name__ == "__main__":  # ✅ fixed from "main"
+if __name__ == "__main__":
     query_text = "Joy"
     query_lat, query_lon = 40.730610, -73.935242
 
@@ -96,12 +100,12 @@ if __name__ == "__main__":  # ✅ fixed from "main"
         collection_name="tweets_collection",
         query_lat=query_lat,
         query_lon=query_lon,
-        #query_text=query_text,
+        # query_text=query_text,
         top_k=5
     )
 
-    context_text = results
+    context_text = prepare_context_text(results)  # ✅ convert results to text
     prompt = build_prompt(context_text)
-    result = run_mistral_json(prompt)
+    result = run_mistral_json(prompt, context_text)
 
     print(result)

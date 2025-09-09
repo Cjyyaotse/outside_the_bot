@@ -1,7 +1,17 @@
+#!/usr/bin/env python3
+"""
+Chunked, resumable embed + upload to Qdrant.
+
+- Uses integer point IDs = JSONL line numbers (1-based)
+- Writes progress to .upload_checkpoint.json so you can resume
+- Retries uploads with exponential backoff on transient failures
+"""
 import json
 import math
 import os
-from typing import List, Dict, Tuple, Optional
+import time
+import random
+from typing import Iterator, Tuple, List, Dict, Optional
 
 import numpy as np
 from qdrant_client import QdrantClient, models
@@ -10,100 +20,197 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+CHECKPOINT_FILE = ".upload_checkpoint.json"
+
+
 # ------------------------------
-# Helpers
+# Helpers: checkpoint persistence
+# ------------------------------
+def read_checkpoint(collection_name: str) -> int:
+    """Return last processed line number for collection (0 if none)."""
+    if not os.path.exists(CHECKPOINT_FILE):
+        return 0
+    try:
+        with open(CHECKPOINT_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return int(data.get(collection_name, 0))
+    except Exception:
+        return 0
+
+
+def write_checkpoint(collection_name: str, last_line: int) -> None:
+    """Store last processed line number for the collection."""
+    data = {}
+    if os.path.exists(CHECKPOINT_FILE):
+        try:
+            with open(CHECKPOINT_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except Exception:
+            data = {}
+    data[collection_name] = int(last_line)
+    with open(CHECKPOINT_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f)
+
+
+# ------------------------------
+# Stream JSONL tweets lazily
+# ------------------------------
+def stream_jsonl(file_path: str, start_line: int = 1) -> Iterator[Tuple[int, str, float, float]]:
+    """
+    Yield (line_number, text, latitude, longitude).
+    start_line: skip lines < start_line (1-based)
+    """
+    with open(file_path, "r", encoding="utf-8") as f:
+        for idx, raw in enumerate(f, start=1):
+            if idx < start_line:
+                continue
+            if not raw.strip():
+                continue
+            try:
+                item = json.loads(raw)
+            except json.JSONDecodeError:
+                # skip invalid line but advance checkpoint
+                continue
+            text = item.get("text")
+            coords = item.get("coordinates", [None, None])
+            # coordinates in your sample are ["lon","lat"] strings — be robust
+            if not text or not coords or len(coords) < 2:
+                continue
+            try:
+                # try both orders: some earlier code used coords[1]=lat coords[0]=lon
+                lon = float(coords[0])
+                lat = float(coords[1])
+            except Exception:
+                # try swapped
+                try:
+                    lat = float(coords[0])
+                    lon = float(coords[1])
+                except Exception:
+                    continue
+            yield idx, text, lat, lon
+
+
+# ------------------------------
+# Create collection + indexes
+# ------------------------------
+def ensure_collection(client: QdrantClient, collection_name: str, vector_dim: int):
+    if not client.collection_exists(collection_name):
+        client.create_collection(
+            collection_name=collection_name,
+            vectors_config=models.VectorParams(size=vector_dim, distance=models.Distance.COSINE),
+        )
+        print(f"✅ Created collection '{collection_name}'")
+
+    # create payload indexes for lat/lon (idempotent - catch exceptions)
+    try:
+        client.create_payload_index(collection_name=collection_name, field_name="latitude", field_schema=models.FloatIndexParams())
+    except Exception:
+        pass
+    try:
+        client.create_payload_index(collection_name=collection_name, field_name="longitude", field_schema=models.FloatIndexParams())
+    except Exception:
+        pass
+
+
+# ------------------------------
+# Reliable upload wrapper with backoff
+# ------------------------------
+def reliable_upload(client: QdrantClient, collection_name: str, embeddings: List[List[float]], payloads: List[Dict], ids: List[int], max_attempts: int = 5):
+    """
+    Upload a single chunk with retries and exponential backoff.
+    Uses client.upload_collection which handles batch uploading.
+    """
+    attempt = 0
+    while True:
+        try:
+            # use integer IDs (not strings). Qdrant expects unsigned int or UUID strings.
+            client.upload_collection(
+                collection_name=collection_name,
+                vectors=embeddings,
+                payload=payloads,
+                ids=ids,
+            )
+            return  # success
+        except Exception as e:
+            attempt += 1
+            if attempt >= max_attempts:
+                raise
+            backoff = (2 ** attempt) + random.random()
+            print(f"⚠️ Batch upload failed (attempt {attempt}/{max_attempts}): {e!r}. Retrying in {backoff:.1f}s...")
+            time.sleep(backoff)
+
+
+# ------------------------------
+# Chunked embedding + resumable upload
+# ------------------------------
+def embed_and_upload_in_chunks_resumable(
+    client: QdrantClient,
+    collection_name: str,
+    jsonl_file_path: str,
+    chunk_size: int = 500,
+    model_name: str = "BAAI/bge-small-en-v1.5",
+    resume: bool = True,
+):
+    embedding_model = TextEmbedding(model_name=model_name)
+
+    # get last processed line
+    last_processed = read_checkpoint(collection_name) if resume else 0
+    start_line = last_processed + 1
+    print(f"Resuming from line {start_line} (last processed {last_processed})")
+
+    # create a dummy embedding to determine vector size (if needed)
+    dummy_vec = list(embedding_model.embed(["hello"]))[0]
+    ensure_collection(client, collection_name, vector_dim=len(dummy_vec))
+
+    docs: List[str] = []
+    payloads: List[Dict] = []
+    ids: List[int] = []
+
+    processed_count = last_processed
+    chunk_id = 0
+
+    for line_no, text, lat, lon in stream_jsonl(jsonl_file_path, start_line=start_line):
+        docs.append(text)
+        payloads.append({"document": text, "latitude": lat, "longitude": lon})
+        ids.append(int(line_no))  # integer id = line number
+
+        if len(docs) >= chunk_size:
+            chunk_id += 1
+            print(f"🚀 Uploading chunk {chunk_id} (lines up to {line_no}) size={len(docs)} ...")
+            embeddings = list(embedding_model.embed(docs))
+            reliable_upload(client, collection_name, embeddings, payloads, ids)
+            processed_count = line_no
+            write_checkpoint(collection_name, processed_count)
+            print(f"✅ Chunk {chunk_id} uploaded. checkpoint -> {processed_count}")
+            docs, payloads, ids = [], [], []
+
+    # final leftover
+    if docs:
+        chunk_id += 1
+        last_line_in_chunk = ids[-1]
+        print(f"🚀 Uploading final chunk {chunk_id} (lines up to {last_line_in_chunk}) size={len(docs)} ...")
+        embeddings = list(embedding_model.embed(docs))
+        reliable_upload(client, collection_name, embeddings, payloads, ids)
+        processed_count = last_line_in_chunk
+        write_checkpoint(collection_name, processed_count)
+        print(f"✅ Final chunk uploaded. checkpoint -> {processed_count}")
+
+    print(f"🎉 All done. Last processed line: {processed_count}")
+
+
+# ------------------------------
+# Small Haversine (for later searching)
 # ------------------------------
 def haversine_distance(lat1, lon1, lat2, lon2):
-    R = 6371.0  # Earth radius in km
+    R = 6371.0
     phi1 = math.radians(lat1)
     phi2 = math.radians(lat2)
     dphi = math.radians(lat2 - lat1)
     dlambda = math.radians(lon2 - lon1)
-    a = math.sin(dphi/2.0)**2 + math.cos(phi1)*math.cos(phi2)*math.sin(dlambda/2.0)**2
+    a = math.sin(dphi / 2.0) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2.0) ** 2
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     return R * c
 
-# ------------------------------
-# 1️⃣ Load JSONL tweets
-# ------------------------------
-def load_jsonl_tweets(file_path: str) -> Tuple[List[str], List[Dict]]:
-    documents = []
-    metadata = []
-    with open(file_path, "r", encoding="utf-8") as f:
-        for line in f:
-            if line.strip():
-                item = json.loads(line)
-                text = item.get("text")
-                coords = item.get("coordinates", [None, None])
-                if text and coords[0] is not None and coords[1] is not None:
-                    documents.append(text)
-                    metadata.append({
-                        "longitude": float(coords[0]),
-                        "latitude": float(coords[1])
-                    })
-    return documents, metadata
-
-# ------------------------------
-# 2️⃣ Embed tweets
-# ------------------------------
-def embed_documents(documents: List[str], model_name="BAAI/bge-small-en-v1.5") -> List[List[float]]:
-    embedding_model = TextEmbedding(model_name=model_name)
-    embeddings = list(embedding_model.embed(documents))
-    return embeddings
-
-# ------------------------------
-# 3️⃣ Upload embeddings + metadata to Qdrant (creates indexes)
-# ------------------------------
-def upload_to_qdrant(
-    client: QdrantClient,
-    collection_name: str,
-    documents: List[str],
-    embeddings: List[List[float]],
-    metadata: List[Dict]
-):
-    # If exists, delete for a clean slate (optional)
-    if client.collection_exists(collection_name):
-        client.delete_collection(collection_name)
-
-    client.create_collection(
-        collection_name=collection_name,
-        vectors_config=models.VectorParams(
-            size=len(embeddings[0]),
-            distance=models.Distance.COSINE
-        )
-    )
-
-    # Create payload indexes for latitude and longitude so range filters are allowed
-    # (If the index already exists or server doesn't support it, ignore the error.)
-    try:
-        client.create_payload_index(
-            collection_name=collection_name,
-            field_name="latitude",
-            field_schema=models.FloatIndexParams()
-        )
-    except Exception:
-        pass
-
-    try:
-        client.create_payload_index(
-            collection_name=collection_name,
-            field_name="longitude",
-            field_schema=models.FloatIndexParams()
-        )
-    except Exception:
-        pass
-
-    payload_with_docs = [{"document": doc, **meta} for doc, meta in zip(documents, metadata)]
-
-    # Upload points (upload_collection is fine if available in your client; upsert/upload_points are alternatives)
-    client.upload_collection(
-        collection_name=collection_name,
-        vectors=embeddings,
-        payload=payload_with_docs,
-        ids=list(range(len(documents))),
-    )
-
-# ------------------------------
 # 4️⃣ Hybrid search (using query_points)
 # ------------------------------
 def hybrid_search(
@@ -113,7 +220,7 @@ def hybrid_search(
     query_lon: float,
     text_query: Optional[str] = None,
     radius_km: float = 50,
-    top_k: int = 2,
+    top_k: int = 5,
     candidate_limit: int = 1000
 ):
     """
@@ -128,7 +235,9 @@ def hybrid_search(
     """
     # PATH A: text query provided -> vector candidates then client-side spatial filter
     if text_query and text_query.strip():
-        qvec = embed_documents([text_query])[0]
+        embedding_model = TextEmbedding(model_name="BAAI/bge-small-en-v1.5")
+        embeddings = list(embedding_model.embed([text_query]))
+        qvec = embeddings[0]
         # get many candidate vector hits (no server-side geo filter)
         resp = client.query_points(
             collection_name=collection_name,
@@ -237,66 +346,29 @@ def hybrid_search(
         "similar_texts_by_vector": similar_texts_out
     }
 
+
 # ------------------------------
-# Example Usage (Qdrant Cloud)
+# Example usage / CLI
 # ------------------------------
 if __name__ == "__main__":
-    QDRANT_URL = os.getenv("QDRANT_URL", "https://e05d9b10-8125-4e7e-be19-29cc4c4ca59f.us-east4-0.gcp.cloud.qdrant.io")
+    QDRANT_URL = os.getenv("QDRANT_URL", "https://YOUR-INSTANCE.gcp.cloud.qdrant.io")
     API_KEY = os.getenv("QDRANT_API_KEY")
     if not API_KEY:
-        raise RuntimeError("Set QDRANT_API_KEY in your environment (or .env) before running.")
+        raise RuntimeError("Set QDRANT_API_KEY in your environment or .env")
 
     client = QdrantClient(url=QDRANT_URL, api_key=API_KEY)
 
+    collection_name = "tweets_collection"
+    jsonl_file_path = "datasets/text_coordinates_regions.jsonl"
+    chunk_size = 500  # tune to your machine
+
     print("Collections:", client.get_collections())
 
-    jsonl_file_path = "datasets/text_coordinates_regions.jsonl"
-    documents, metadata = load_jsonl_tweets(jsonl_file_path)
-    print(f"Loaded {len(documents)} tweets.")
-    if documents:
-        embeddings_list = embed_documents(documents)
-        upload_to_qdrant(client, "tweets_collection", documents, embeddings_list, metadata)
-        print("Uploaded collection (tweets_collection).")
-
-    raw_lat = input("Enter query latitude (e.g. 43.243963): ").strip()
-    raw_lon = input("Enter query longitude (e.g. -79.728099): ").strip()
-    raw_text = input("Optional text query (press enter to skip): ").strip()
-
-    try:
-        qlat = float(raw_lat)
-        qlon = float(raw_lon)
-    except ValueError:
-        raise ValueError("Latitude and longitude must be valid floats.")
-
-    results = hybrid_search(
+    embed_and_upload_in_chunks_resumable(
         client=client,
-        collection_name="tweets_collection",
-        query_lat=qlat,
-        query_lon=qlon,
-        text_query=(raw_text if raw_text else None),
-        radius_km=50,
-        top_k=5
+        collection_name=collection_name,
+        jsonl_file_path=jsonl_file_path,
+        chunk_size=chunk_size,
+        model_name="BAAI/bge-small-en-v1.5",
+        resume=True,
     )
-
-    if not results:
-        print("No nearby points found within radius.")
-    else:
-        if isinstance(results, dict):
-            print("\nNearest by location (top results):")
-            for i, item in enumerate(results["nearest_by_location"], start=1):
-                print(f"{i}. {item['document']} — {item['distance_km']:.2f} km (lat={item['latitude']}, lon={item['longitude']})")
-            print("\nSimilar texts by vector (top results):")
-            for i, item in enumerate(results["similar_texts_by_vector"], start=1):
-                score = item.get("score")
-                score_str = f"score={score:.4f}" if score is not None else ""
-                dist = item.get("distance_km")
-                dist_str = f"{dist:.2f} km" if dist is not None else "N/A"
-                print(f"{i}. {item['document']} — {dist_str} {score_str}")
-        else:
-            print("\nSearch results (by text + location filter):")
-            for i, item in enumerate(results, start=1):
-                score = item.get("score")
-                score_str = f"score={score:.4f}" if score is not None else ""
-                dist = item.get("distance_km")
-                dist_str = f"{dist:.2f} km" if dist is not None else "N/A"
-                print(f"{i}. {item['document']} — {dist_str} {score_str}")
