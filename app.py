@@ -1,13 +1,18 @@
 import os
 from dotenv import load_dotenv
 from fastapi import FastAPI, Query
-from src.main import (
+from fastapi.responses import JSONResponse
+from src.services.main import (
     hybrid_search,
     build_prompt,
     prepare_context_text,
     get_llm_response
 )
 from qdrant_client import QdrantClient
+from src.services.metrics import (
+    get_total_tweets,
+    get_unique_locations
+)
 
 # Load environment variables
 load_dotenv()
@@ -43,6 +48,14 @@ def root():
     """
     return {"message": "Welcome to the Tweet Classification App"}
 
+@app.post("/get_static_metrics")
+def static_metrics():
+    total_tweets = get_total_tweets(qdrant_client)
+    unique_locations_count = get_unique_locations(qdrant_client)
+    return JSONResponse(content={
+           "total_conversations": total_tweets,
+           "active_hotspots": unique_locations_count
+       })
 
 @app.get("/get_tweets_inspo", tags=["Tweet Search"])
 def search_tweets(
@@ -77,7 +90,12 @@ def search_tweets(
     # Step 4: Get structured JSON response from Mistral
     result = get_llm_response(prompt, context_text)
 
-    return {
+    return JSONResponse(content={
     "tweets": tweets,
     "summary":result
-    }
+    })
+
+@app.get("/get_tweets(trending)", tags=["Trending tweets"])
+def get_tweets(topic:str):
+    tweets = {}
+    return tweets
