@@ -11,7 +11,8 @@ from src.services.main import (
 from qdrant_client import QdrantClient
 from src.services.metrics import (
     get_total_tweets,
-    get_unique_locations
+    get_unique_locations,
+    search_similar_tweets
 )
 
 # Load environment variables
@@ -47,6 +48,15 @@ def root():
     Root endpoint to check if the API is running.
     """
     return {"message": "Welcome to the Tweet Classification App"}
+
+@app.get("/get_similar_tweets")
+def similar_tweets(query_text:str):
+    response = search_similar_tweets(
+        qdrant_client,
+        collection_name="tweets_collection",
+        query_text=query_text)
+    return JSONResponse(content=response)
+
 
 @app.post("/get_static_metrics")
 def static_metrics():
