@@ -11,6 +11,10 @@ export default {
       },
       colors: {
         "primary": "#000000"
+      },
+      backgroundImage: {
+        "hd-wpaper": "url('./src/assets/images/HD_WALLPAPER.jpg')",
+        "mock-map": "url('./src/assets/images/OutbotMap.png')"
       }
     },
   },
