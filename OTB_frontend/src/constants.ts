@@ -21,3 +21,26 @@ export const tags: TagTypes[] = [
   }
 
 ]
+
+
+export const USERNAMES = [
+  // From Image 1
+  "iamthedragonwarrior",
+  "thenamesKoala",
+  "HamsterDampster_Billy",
+  "BearoCore237",
+  "whatsupDoc-98",
+  "icicleKingwasHere",
+  "oinkChronicles",
+  "Clubhouse_Mickey",
+
+  // From Image 2
+  "PotasiumPillPopper",
+  "iAlwaysWantedABrother",
+  "Pondmeals",
+  "Rrrrrrrribid!!",
+  "fullmoonmode",
+  "iactuallylikeCats",
+  "MilkyWays",
+  "icouldtakeMufasa24/7"
+];
