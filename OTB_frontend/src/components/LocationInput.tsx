@@ -1,26 +1,105 @@
 import { useEffect, useRef, useState } from "react";
-import Marker from "../assets/icons/Marker.svg";
+import {
+  MapPin,
+  Store,
+  Building2,
+  Utensils,
+  Car,
+  GraduationCap,
+  Heart,
+  Plane,
+  Home,
+  ShoppingBag,
+  Coffee,
+  Fuel,
+  Hotel,
+  TreePine,
+  Dumbbell
+} from "lucide-react";
+import type { LocationType } from "./SideBar";
+
+interface LocationSuggestion {
+  id: string;
+  name: string;
+  subtitle: string;
+  type: LocationType;
+  coordinates?: {
+    lat: number;
+    lng: number;
+  };
+}
+
+// type LocationType =
+//   | 'restaurant'
+//   | 'retail_store'
+//   | 'bank'
+//   | 'hospital'
+//   | 'school'
+//   | 'hotel'
+//   | 'gas_station'
+//   | 'cafe'
+//   | 'airport'
+//   | 'residential'
+//   | 'shopping_mall'
+//   | 'park'
+//   | 'gym'
+//   | 'default';
 
 interface LocationInputProps {
   value: string;
-  onChange: (val: string) => void;
+  onChange: (val: string, location?: LocationSuggestion) => void;
   placeholder?: string;
+  suggestions: LocationSuggestion[];
+  isLoading?: boolean;
 }
 
-const mockSuggestions = [
-  { name: "Greenfield Retail Store", subtitle: "Nairobi, Kenya" },
-  { name: "Omotosho Road Basic", subtitle: "Birmingham, UK" },
-  { name: "First Rizz Bank", subtitle: "Bali" },
-  { name: "International Locked Centre", subtitle: "South Africa" },
-  { name: "Public Dance Museum", subtitle: "Denmark" },
-];
+const getLocationIcon = (type: LocationType) => {
+  const iconProps = { size: 18, className: "text-[#1DA1F2]" };
+  switch (type) {
+    case 'restaurant':
+      return <Utensils {...iconProps} />;
+    case 'retail_store':
+      return <Store {...iconProps} />;
+    case 'bank':
+      return <Building2 {...iconProps} />;
+    case 'hospital':
+      return <Heart {...iconProps} />;
+    case 'school':
+      return <GraduationCap {...iconProps} />;
+    case 'hotel':
+      return <Hotel {...iconProps} />;
+    case 'gas_station':
+      return <Fuel {...iconProps} />;
+    case 'cafe':
+      return <Coffee {...iconProps} />;
+    case 'airport':
+      return <Plane {...iconProps} />;
+    case 'residential':
+      return <Home {...iconProps} />;
+    case 'shopping_mall':
+      return <ShoppingBag {...iconProps} />;
+    case 'park':
+      return <TreePine {...iconProps} />;
+    case 'gym':
+      return <Dumbbell {...iconProps} />;
+    default:
+      return <MapPin {...iconProps} />;
+  }
+};
 
-const LocationInput: React.FC<LocationInputProps> = ({ value, onChange, placeholder }) => {
+const LocationInput: React.FC<LocationInputProps> = ({
+  value,
+  onChange,
+  placeholder,
+  suggestions,
+  isLoading = false
+}) => {
+
   const [focus, setFocus] = useState(false);
   const [query, setQuery] = useState(value);
   const divRef = useRef<HTMLDivElement>(null);
 
-  const filteredSuggestions = mockSuggestions.filter(
+  const filteredSuggestions = suggestions.filter(
     (item) =>
       item.name.toLowerCase().includes(query.toLowerCase()) ||
       item.subtitle.toLowerCase().includes(query.toLowerCase())
@@ -36,21 +115,22 @@ const LocationInput: React.FC<LocationInputProps> = ({ value, onChange, placehol
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSelect = (suggestion: string) => {
-    onChange(suggestion);
-    setQuery(suggestion);
+  const handleSelect = (suggestion: LocationSuggestion) => {
+    const fullLocation = `${suggestion.name}, ${suggestion.subtitle}`;
+    onChange(fullLocation, suggestion);
+    setQuery(fullLocation);
     setFocus(false);
   };
 
   return (
     <div className="relative w-full" ref={divRef}>
       <div
-        className={`flex items-center border-[2px] rounded-full px-[6px] py-[8px] relative ${focus ? "border-[#1DA1F2] bg-[#1DA1F21A]" : "border-[#808080]"
+        className={`flex items-center border-[2px] rounded-full px-[6px] h-[60px] py-[8px] relative ${focus ? "border-[#1DA1F2] bg-[#1DA1F21A]" : "border-white"
           }`}
       >
-        <img src={Marker} alt="marker" className="w-[20px] h-[20px] mr-2" />
+        <MapPin size={20} className="text-white mr-2" />
         <input
-          className="bg-transparent h-full w-full rounded-full focus:outline-none text-white"
+          className="bg-transparent h-full w-full focus:outline-none text-white z-50"
           placeholder={placeholder}
           value={query}
           onFocus={() => setFocus(true)}
@@ -59,23 +139,40 @@ const LocationInput: React.FC<LocationInputProps> = ({ value, onChange, placehol
             onChange(e.target.value);
           }}
         />
+        {isLoading && (
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#1DA1F2] mr-2"></div>
+        )}
       </div>
 
       {focus && query && (
-        <div className="absolute mt-2 w-full bg-[#0F1621] rounded-lg border border-[#1DA1F2] shadow-lg z-50">
-          {filteredSuggestions.length > 0 ? (
-            filteredSuggestions.map((item, i) => (
-              <div
-                key={i}
-                className="px-4 py-2 cursor-pointer hover:bg-[#1DA1F2]/20 text-white"
-                onClick={() => handleSelect(`${item.name}, ${item.subtitle}`)}
+        <div className="absolute mt-2 w-full bg-[#000000] rounded-[16px] shadow-sm shadow-[#FFFFFFBF] z-50 max-h-[295px] overflow-y-scroll scrollbar-hide">
+          {isLoading ? (
+            <div className="px-4 py-6 text-center">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#1DA1F2] mx-auto mb-2"></div>
+              <p className="text-gray-400 text-sm">Searching locations...</p>
+            </div>
+          ) : filteredSuggestions.length > 0 ? (
+            filteredSuggestions.map((item) => (
+              <button
+                key={item.id}
+                className="px-4 text-left w-full py-3 cursor-pointer hover:bg-[#16181C] text-white flex items-start gap-3 transition-colors duration-150"
+                onClick={() => handleSelect(item)}
               >
-                <p className="font-semibold">{item.name}</p>
-                <p className="text-sm text-gray-400">{item.subtitle}</p>
-              </div>
+                <div className="mt-1 flex-shrink-0">
+                  {getLocationIcon(item.type)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm text-white truncate">{item.name}</p>
+                  <p className="text-sm text-[#71767B] font-normal truncate">{item.subtitle}</p>
+                </div>
+              </button>
             ))
           ) : (
-            <p className="px-4 py-2 text-gray-400">No results</p>
+            <div className="px-4 py-6 text-center">
+              <MapPin size={24} className="text-gray-600 mx-auto mb-2" />
+              <p className="text-gray-400 text-sm">No locations found</p>
+              <p className="text-gray-500 text-xs mt-1">Try adjusting your search</p>
+            </div>
           )}
         </div>
       )}

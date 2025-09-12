@@ -62,3 +62,41 @@ body {
   font-style: normal;
   font-display: swap;
 }
+
+/* Hide scrollbar but allow scrolling */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari and Opera */
+}
+
+.custom-scrollbar {
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: #DC8B18 transparent;
+
+  /* Webkit browsers */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 0px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 0px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: transparent;
+  }
+}

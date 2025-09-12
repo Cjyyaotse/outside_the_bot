@@ -47,11 +47,11 @@ const Select = () => {
 
         {/* Dropdown */}
         {open && (
-          <div className="absolute mt-2 w-full bg-[#0F1621] border border-[#1DA1F2] rounded-lg shadow-lg z-50">
+          <div className="absolute mt-2 w-full bg-[#000000] rounded-[16px] shadow-sm shadow-[#FFFFFFBF] z-50 max-h-[295px] overflow-y-scroll scrollbar-hide">
             {options.map((option) => (
-              <div
+              <button
                 key={option.value}
-                className={`px-4 py-3 cursor-pointer hover:bg-[#1DA1F2]/20 ${selected.value === option.value ? "bg-[#1DA1F2]/10" : ""
+                className={`px-4 text-left w-full py-3 cursor-pointer hover:bg-[#16181C] text-white flex items-start gap-3 transition-colors duration-150 ${selected.value === option.value ? "bg-[#16181C]" : ""
                   }`}
                 onClick={() => {
                   setSelected(option);
@@ -59,7 +59,7 @@ const Select = () => {
                 }}
               >
                 {option.label}
-              </div>
+              </button>
             ))}
           </div>
         )}

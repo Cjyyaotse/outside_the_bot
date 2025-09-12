@@ -11,27 +11,156 @@ import EchoGridModal from "../components/EchoGridModal"
 import TweetResults from "../components/TweetResults"
 import CompareTweets from "../components/CompareTweets"
 
+
+export const mockSuggestions: LocationSuggestion[] = [
+  {
+    id: "1",
+    name: "Greenfield Retail Store",
+    subtitle: "Nairobi, Kenya",
+    type: "retail_store",
+    coordinates: {
+      lat: -1.2921,
+      lng: 36.8219
+    }
+  },
+  {
+    id: "2",
+    name: "Omotosho Road Basic",
+    subtitle: "Birmingham, UK", 
+    type: "school",
+    coordinates: {
+      lat: 52.4862,
+      lng: -1.8904
+    }
+  },
+  {
+    id: "3",
+    name: "First Rizz Bank",
+    subtitle: "Bali",
+    type: "bank",
+    coordinates: {
+      lat: -8.3405,
+      lng: 115.0920
+    }
+  },
+  {
+    id: "4",
+    name: "International Locked Centre",
+    subtitle: "South Africa",
+    type: "shopping_mall",
+    coordinates: {
+      lat: -30.5595,
+      lng: 22.9375
+    }
+  },
+  {
+    id: "5", 
+    name: "Public Dance Museum",
+    subtitle: "Denmark",
+    type: "default",
+    coordinates: {
+      lat: 56.2639,
+      lng: 9.5018
+    }
+  }
+];
+
+// Import the types from your LocationInput component
+export interface LocationSuggestion {
+  id: string;
+  name: string;
+  subtitle: string;
+  type: LocationType;
+  coordinates?: {
+    lat: number;
+    lng: number;
+  };
+}
+
+export type LocationType =
+  | 'restaurant'
+  | 'retail_store'
+  | 'bank'
+  | 'hospital'
+  | 'school'
+  | 'hotel'
+  | 'gas_station'
+  | 'cafe'
+  | 'airport'
+  | 'residential'
+  | 'shopping_mall'
+  | 'park'
+  | 'gym'
+  | 'default';
+
 type ModalType = 'echogrid' | 'search' | 'compare' | null;
 
-const SideBar = () => {
+interface LocationData {
+  query: string;
+  selectedLocation?: LocationSuggestion;
+}
 
+const SideBar = () => {
   const [typing, setTyping] = useState("")
-  const [locations, setLocations] = useState<string[]>([""]);
+  const [locations, setLocations] = useState<LocationData[]>([{ query: "" }]);
+  const [locationSuggestions, setLocationSuggestions] = useState<LocationSuggestion[]>(mockSuggestions);
+  const [isLoadingLocations, setIsLoadingLocations] = useState(false);
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
+  // Fetch location suggestions from your API
+  const fetchLocationSuggestions = async (query: string) => {
+    if (query.length < 2) {
+      setLocationSuggestions([]);
+      return;
+    }
+
+    setIsLoadingLocations(true);
+    try {
+      // Replace with your actual API endpoint
+      const response = await fetch(`/api/locations?q=${encodeURIComponent(query)}`);
+      const data = await response.json();
+      setLocationSuggestions(data);
+    } catch (error) {
+      console.error('Failed to fetch location suggestions:', error);
+      setLocationSuggestions([]);
+    } finally {
+      setIsLoadingLocations(false);
+    }
+  };
+
   const addLocation = () => {
     if (locations.length < 2) {
-      setLocations([...locations, ""]);
+      setLocations([...locations, { query: "" }]);
     }
-    return
   };
 
   const removeLocation = (index: number) => {
     const updated = [...locations];
     updated.splice(index, 1);
     setLocations(updated);
+  };
+
+  const handleLocationChange = (index: number) => (query: string, selectedLocation?: LocationSuggestion) => {
+    const updated = [...locations];
+    updated[index] = {
+      query,
+      selectedLocation
+    };
+    setLocations(updated);
+
+    // Fetch suggestions when user types
+    if (!selectedLocation && query !== updated[index]?.query) {
+      fetchLocationSuggestions(query);
+    }
+
+    // Log selected location data for your analytics
+    if (selectedLocation) {
+      console.log('Selected location:', selectedLocation);
+      // You can use the coordinates, type, etc. here
+      // Example: updateMapCenter(selectedLocation.coordinates);
+    }
   };
 
   const closeModal = () => {
@@ -42,7 +171,7 @@ const SideBar = () => {
     setTimeout(() => {
       setActiveModal(null);
       setIsAnimating(false);
-    }, 300); // Match the transition duration
+    }, 300);
   };
 
   const openModal = (modalType: ModalType) => {
@@ -57,16 +186,36 @@ const SideBar = () => {
   };
 
   const handleAnalyzeRegion = () => {
+    // Pass selected locations to your analysis
+    const selectedLocations = locations
+      .filter(loc => loc.selectedLocation)
+      .map(loc => loc.selectedLocation!);
+
+    console.log('Analyzing regions:', selectedLocations);
     openModal('search');
   };
 
   const handleCompareRegions = () => {
+    // Pass selected locations for comparison
+    const selectedLocations = locations
+      .filter(loc => loc.selectedLocation)
+      .map(loc => loc.selectedLocation!);
+
+    if (selectedLocations.length < 2) {
+      alert('Please select at least 2 locations to compare');
+      return;
+    }
+
+    console.log('Comparing regions:', selectedLocations);
     openModal('compare');
   };
 
   const handleShowMore = () => {
     openModal('echogrid');
   };
+
+  // Check if compare button should be enabled
+  const canCompareRegions = locations.filter(loc => loc.selectedLocation).length >= 2;
 
   // Reset animation states when modal changes
   useEffect(() => {
@@ -77,19 +226,17 @@ const SideBar = () => {
 
   return (
     <>
-      <section className='rounded-[20px] space-y-[20px] border-[0.5px] border-[#808080] p-[20px]'>
+      <section className='rounded-[20px] space-y-[20px] border-[0.5px] border-[#808080] p-[20px] max-h-[540px] overflow-y-scroll scrollbar-hide'>
         {/* Search location */}
         <div className="flex flex-col space-y-2">
-          {locations.map((loc, index) => (
+          {locations.map((locationData, index) => (
             <div key={index} className="flex items-center gap-2">
               <LocationInput
-                value={loc}
-                onChange={(val) => {
-                  const updated = [...locations];
-                  updated[index] = val;
-                  setLocations(updated);
-                }}
+                value={locationData.query}
+                onChange={handleLocationChange(index)}
                 placeholder={`Location ${index + 1}`}
+                suggestions={locationSuggestions}
+                isLoading={isLoadingLocations}
               />
 
               {index === 0 ? (
@@ -146,21 +293,29 @@ const SideBar = () => {
         <section className='space-y-4'>
           <button
             onClick={handleAnalyzeRegion}
-            className='cursor-pointer text-black bg-white w-full rounded-[24px] flex justify-center items-center text-base font-semibold h-[48px] transition-all duration-300 ease-in hover:bg-gray-200'
+            disabled={!locations[0]?.selectedLocation}
+            className={`cursor-pointer text-black w-full rounded-[24px] flex justify-center items-center text-base font-semibold h-[48px] transition-all duration-300 ease-in ${locations[0]?.selectedLocation
+                ? 'bg-white hover:bg-gray-200'
+                : 'bg-gray-400 cursor-not-allowed'
+              }`}
           >
             Analyze This Region
           </button>
 
           <button
             onClick={handleCompareRegions}
-            className='cursor-pointer text-white shadow-sm shadow-white bg-[#1DA1F21F] w-full rounded-[24px] flex justify-center items-center text-base font-semibold h-[48px] transition-all duration-300 ease-in hover:bg-[#1da0f236]'
+            disabled={!canCompareRegions}
+            className={`cursor-pointer text-white shadow-sm shadow-white w-full rounded-[24px] flex justify-center items-center text-base font-semibold h-[48px] transition-all duration-300 ease-in ${canCompareRegions
+                ? 'bg-[#1DA1F21F] hover:bg-[#1da0f236]'
+                : 'bg-gray-600 cursor-not-allowed'
+              }`}
           >
             Compare Regions
           </button>
         </section>
       </section>
 
-      {/* Modal Overlay */}
+      {/* Modal Overlay - keeping your existing modal code */}
       {activeModal && (
         <div
           className={`fixed inset-0 z-50 transition-all duration-300 ease-in-out ${isVisible ? 'bg-black bg-opacity-50' : 'bg-transparent'
