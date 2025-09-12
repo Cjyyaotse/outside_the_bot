@@ -50,17 +50,17 @@ const EchoGridModal: React.FC<GridTypes> = ({ onClick }) => {
 
   return (
     <div className="flex items-center justify-center fixed inset-0 bg-black/20 z-50" onClick={onClick}>
-      <div className="bg-[#031018D1] backdrop-blur-sm shadow-sm shadow-[#000000CC] rounded-[16px] max-w-[500px] max-h-[530px]">
+      <div className="bg-[#031018D1]/30 backdrop-blur-sm shadow-sm shadow-[#000000CC] rounded-[16px] max-w-[500px] max-h-[530px]" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div className="p-6 border-b border-slate-700">
-          <h2 className="text-white text-xl font-medium">Echo Grid</h2>
+        <div className="px-6 pt-[16px] pb-[24px]">
+          <h2 className="text-white text-base font-medium">Echo Grid</h2>
         </div>
 
         {/* Content */}
         <div className="space-y-6 max-h-96 overflow-y-auto custom-scrollbar">
           {categories.map((category) => (
             <div key={category.id}>
-              <div className="space-y-3 p-6">
+              <div className="space-y-3 px-6">
                 {/* Category Header */}
                 <div className="flex items-center gap-2">
                   <span className="text-lg">{category.icon}</span>
@@ -76,7 +76,10 @@ const EchoGridModal: React.FC<GridTypes> = ({ onClick }) => {
                     return (
                       <button
                         key={uniqueKey}
-                        onClick={() => toggleTag(category.id as keyof CategoryTags, tag)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleTag(category.id as keyof CategoryTags, tag);
+                        }}
                         className={`px-3 py-1 rounded-full text-sm font-medium transition-all bg-transparent backdrop-blur-sm duration-200 cursor-pointer ${isSelected
                           ? "text-white border-2 border-[#1DA1F2] text-2xl font-light shadow-[0_0_25px_#1DA1F2] "
                           : 'text-slate-300 hover:text-white border'
