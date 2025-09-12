@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import Input from "./Input"
 import Search from "../assets/icons/Search.svg"
-import { tags } from "../constants"
+import { tags } from "../utils/constants"
 import Tag from "./Tag"
 import Plus from "../assets/icons/Plus"
 import Select from "./Select"

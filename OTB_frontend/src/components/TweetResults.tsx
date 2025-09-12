@@ -3,39 +3,11 @@ import React, { useMemo } from 'react';
 import TrendingIcon from '../assets/icons/TrendingIcon.svg'
 import Tag from './Tag';
 import Verified from "../assets/icons/Verified.svg"
-import { AVATARS, COLORS, USERNAMES } from '../constants';
+import { AVATARS, COLORS, USERNAMES } from '../utils/constants';
+import type { RawTweetData, TrendingTopic, TweetResultsProps, UserPost } from '../utils/types';
 
 
-interface TrendingTopic {
-  id: string;
-  label: string;
-}
 
-// Raw tweet data interface (what you'll receive from API)
-interface RawTweetData {
-  id: string;
-  content: string;
-  timeAgo: string;
-  verified?: boolean;
-}
-
-// Formatted user post interface (what gets displayed)
-interface UserPost {
-  id: string;
-  username: string;
-  handle: string;
-  avatar: string;
-  content: string;
-  timeAgo: string;
-  verified?: boolean;
-  bgColor: string;
-}
-
-interface TweetResultsProps {
-  rawTweets?: RawTweetData[];
-  location?: string;
-  searchTerm?: string;
-}
 
 // Utility function to get a consistent random index based on tweet ID
 const getSeededRandomIndex = (id: string, arrayLength: number): number => {

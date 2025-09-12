@@ -29,22 +29,6 @@ interface LocationSuggestion {
   };
 }
 
-// type LocationType =
-//   | 'restaurant'
-//   | 'retail_store'
-//   | 'bank'
-//   | 'hospital'
-//   | 'school'
-//   | 'hotel'
-//   | 'gas_station'
-//   | 'cafe'
-//   | 'airport'
-//   | 'residential'
-//   | 'shopping_mall'
-//   | 'park'
-//   | 'gym'
-//   | 'default';
-
 interface LocationInputProps {
   value: string;
   onChange: (val: string, location?: LocationSuggestion) => void;

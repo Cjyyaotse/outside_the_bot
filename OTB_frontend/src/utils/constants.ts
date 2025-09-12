@@ -1,4 +1,4 @@
-import type { TagTypes } from "./components/Tag";
+import type { TagTypes } from "../components/Tag";
 import Bear from "./assets/avatars/Bear.svg";
 import CowFace from "./assets/avatars/Cow Face.svg";
 import DogFace from "./assets/avatars/Dog Face.svg";
