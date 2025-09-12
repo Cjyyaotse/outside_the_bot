@@ -1,20 +1,20 @@
 import type { TagTypes } from "../components/Tag";
-import Bear from "./assets/avatars/Bear.svg";
-import CowFace from "./assets/avatars/Cow Face.svg";
-import DogFace from "./assets/avatars/Dog Face.svg";
-import BabyChick from "./assets/avatars/Front Facing Baby Chick.svg";
-import Fox from "./assets/avatars/Fox.svg";
-import Frog from "./assets/avatars/Frog.svg";
-import Hamster from "./assets/avatars/Hamster.svg";
-import Koala from "./assets/avatars/Koala.svg";
-import Lion from "./assets/avatars/Lion.svg";
-import MonkeyFace from "./assets/avatars/Monkey Face.svg";
-import MouseFace from "./assets/avatars/Mouse Face.svg";
-import Panda from "./assets/avatars/Panda.svg";
-import PigFace from "./assets/avatars/Pig Face.svg";
-import RabbitFace from "./assets/avatars/Rabbit Face.svg";
-import TigerFace from "./assets/avatars/Tiger Face.svg";
-import PolarBear from "./assets/avatars/Polar Bear.svg";
+import Bear from "../assets/avatars/Bear.svg";
+import CowFace from "../assets/avatars/Cow Face.svg";
+import DogFace from "../assets/avatars/Dog Face.svg";
+import BabyChick from "../assets/avatars/Front Facing Baby Chick.svg";
+import Fox from "../assets/avatars/Fox.svg";
+import Frog from "../assets/avatars/Frog.svg";
+import Hamster from "../assets/avatars/Hamster.svg";
+import Koala from "../assets/avatars/Koala.svg";
+import Lion from "../assets/avatars/Lion.svg";
+import MonkeyFace from "../assets/avatars/Monkey Face.svg";
+import MouseFace from "../assets/avatars/Mouse Face.svg";
+import Panda from "../assets/avatars/Panda.svg";
+import PigFace from "../assets/avatars/Pig Face.svg";
+import RabbitFace from "../assets/avatars/Rabbit Face.svg";
+import TigerFace from "../assets/avatars/Tiger Face.svg";
+import PolarBear from "../assets/avatars/Polar Bear.svg";
 
 
 export const tags: TagTypes[] = [
