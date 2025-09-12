@@ -319,7 +319,7 @@ const SideBar = () => {
       {/* Modal Overlay - keeping your existing modal code */}
       {activeModal && (
         <div
-          className={`fixed inset-0 z-50 transition-all duration-300 ease-in-out ${isVisible ? '' : 'bg-transparent'
+          className={`fixed inset-0 z-50 transition-all duration-300 ease-in-out ${isVisible ? 'bg-black/50' : 'bg-transparent'
             }`}
         >
           {/* EchoGrid Modal */}

@@ -69,7 +69,7 @@ const MapCanvas = () => {
     return () => mapRef.current?.remove();
   }, []);
 
-  return <div ref={mapContainerRef} style={{ height: '100%', width: '100%' }} />;
+  return <div ref={mapContainerRef} style={{ height: '100%', width: '100%', borderRadius: '8px' }} />;
 };
 
 export default MapCanvas;
