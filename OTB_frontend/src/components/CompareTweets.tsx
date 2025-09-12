@@ -1,5 +1,8 @@
 import React from 'react';
-// import { X, Upload, TrendingUp } from 'lucide-react';
+import TrendingIcon from '../assets/icons/TrendingIcon.svg'
+import { MapPin, Upload, X } from 'lucide-react';
+import Tag from './Tag';
+
 
 interface TrendingTopic {
   id: string;
@@ -117,36 +120,31 @@ const CompareTweets: React.FC = () => {
   };
 
   const renderLocationPanel = (data: LocationData) => (
-    <div className="flex-1 min-h-screen bg-slate-900 text-white">
+    <div className="flex-1 h-[100vh] overflow-auto custom-scrollbar text-white">
       {/* Header */}
-      <div className="flex items-center gap-2 p-4 border-b border-slate-700">
-        <div className="w-4 h-4 rounded-full border border-white flex items-center justify-center">
-          <div className="w-2 h-2 bg-white rounded-full"></div>
-        </div>
+      <div className="flex items-center gap-2 p-4">
+        <MapPin className="text-white" size={16} />
         <span className="text-sm">{data.name}</span>
       </div>
 
       {/* Search Description */}
-      <div className="p-4 border-b border-slate-700">
-        <p className="text-sm text-gray-300 leading-relaxed">
-          Looking for "music" in {data.name}? The search is a bit quiet right now, but conversations about this topic do happen here!
-        </p>
+      <div className="px-4 pb-[24px] border-b border-[#333639] ">
+        <div className='p-[20px] rounded-[20px] bg-transparent border-[1px] border-[#333639]'>
+          <p className="text-sm text-gray-300 leading-relaxed">
+            Looking for "music" in London? The search is a bit quiet right now, but conversations about this topic do happen here!
+          </p>
+        </div>
       </div>
 
       {/* Trending Topics */}
-      <div className="p-4 border-b border-slate-700">
+      <div className="p-4 mb-[24px]">
         <div className="flex items-center gap-2 mb-3">
-          {/* <TrendingUp className="w-4 h-4" /> */}
-          <h3 className="text-sm font-medium">Trending Topics</h3>
+          <img src={TrendingIcon} alt='trending' />
+          <h3 className="text-sm font-semibold text-[#CBD5E0]">Trending Topics</h3>
         </div>
         <div className="flex flex-wrap gap-2">
           {data.trendingTopics.map((topic, index) => (
-            <button
-              key={`${topic.id}-${index}`}
-              className="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-sm rounded-full transition-colors"
-            >
-              {topic.label}
-            </button>
+            <Tag key={`${topic.id}-${index}`} name={topic.label} />
           ))}
         </div>
       </div>
@@ -192,13 +190,13 @@ const CompareTweets: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="h-[100vh] backdrop-blur-md">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-slate-700 bg-slate-900">
+      <div className="flex items-center justify-between p-4">
         <h1 className="text-white text-lg font-medium">Compare Mode</h1>
         <div className="flex items-center gap-3">
-          {/* <Upload className="w-5 h-5 text-white cursor-pointer hover:text-gray-300" /> */}
-          {/* <X className="w-5 h-5 text-white cursor-pointer hover:text-gray-300" /> */}
+          <Upload className="w-5 h-5 text-white cursor-pointer hover:text-gray-300" />
+          <X className="w-5 h-5 text-white cursor-pointer hover:text-gray-300" />
         </div>
       </div>
 

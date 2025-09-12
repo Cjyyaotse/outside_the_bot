@@ -79,7 +79,7 @@ body {
 .custom-scrollbar {
   /* Firefox */
   scrollbar-width: thin;
-  scrollbar-color: #DC8B18 transparent;
+  scrollbar-color: #1DA1F2 transparent;
 
   /* Webkit browsers */
   &::-webkit-scrollbar {

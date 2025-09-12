@@ -26,7 +26,7 @@ export const mockSuggestions: LocationSuggestion[] = [
   {
     id: "2",
     name: "Omotosho Road Basic",
-    subtitle: "Birmingham, UK", 
+    subtitle: "Birmingham, UK",
     type: "school",
     coordinates: {
       lat: 52.4862,
@@ -54,7 +54,7 @@ export const mockSuggestions: LocationSuggestion[] = [
     }
   },
   {
-    id: "5", 
+    id: "5",
     name: "Public Dance Museum",
     subtitle: "Denmark",
     type: "default",
@@ -295,8 +295,8 @@ const SideBar = () => {
             onClick={handleAnalyzeRegion}
             disabled={!locations[0]?.selectedLocation}
             className={`cursor-pointer text-black w-full rounded-[24px] flex justify-center items-center text-base font-semibold h-[48px] transition-all duration-300 ease-in ${locations[0]?.selectedLocation
-                ? 'bg-white hover:bg-gray-200'
-                : 'bg-gray-400 cursor-not-allowed'
+              ? 'bg-white hover:bg-gray-200'
+              : 'bg-gray-400 cursor-not-allowed'
               }`}
           >
             Analyze This Region
@@ -306,8 +306,8 @@ const SideBar = () => {
             onClick={handleCompareRegions}
             disabled={!canCompareRegions}
             className={`cursor-pointer text-white shadow-sm shadow-white w-full rounded-[24px] flex justify-center items-center text-base font-semibold h-[48px] transition-all duration-300 ease-in ${canCompareRegions
-                ? 'bg-[#1DA1F21F] hover:bg-[#1da0f236]'
-                : 'bg-gray-600 cursor-not-allowed'
+              ? 'bg-[#1DA1F21F] hover:bg-[#1da0f236]'
+              : 'bg-gray-600 cursor-not-allowed'
               }`}
           >
             Compare Regions
@@ -315,12 +315,18 @@ const SideBar = () => {
         </section>
       </section>
 
+
       {/* Modal Overlay - keeping your existing modal code */}
       {activeModal && (
         <div
-          className={`fixed inset-0 z-50 transition-all duration-300 ease-in-out ${isVisible ? 'bg-black bg-opacity-50' : 'bg-transparent'
+          className={`fixed inset-0 z-50 transition-all duration-300 ease-in-out ${isVisible ? '' : 'bg-transparent'
             }`}
         >
+          {/* EchoGrid Modal */}
+          {activeModal === 'echogrid' && (
+            <EchoGridModal onClick={closeModal} />
+          )}
+
           {/* Right-side Modal Container */}
           <div
             className={`fixed right-0 top-0 h-full transform transition-all duration-300 ease-in-out ${isVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
@@ -330,15 +336,6 @@ const SideBar = () => {
               transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
             }}
           >
-            {/* EchoGrid Modal */}
-            {activeModal === 'echogrid' && (
-              <div className="h-full flex items-center justify-center p-4">
-                <div className={`transform transition-all duration-300 ease-in-out ${isVisible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
-                  }`}>
-                  <EchoGridModal onClick={closeModal} />
-                </div>
-              </div>
-            )}
 
             {/* Search Results Modal */}
             {activeModal === 'search' && (
@@ -359,13 +356,7 @@ const SideBar = () => {
             {/* Compare Tweets Modal */}
             {activeModal === 'compare' && (
               <div className="h-full w-[800px] relative shadow-2xl">
-                <button
-                  onClick={closeModal}
-                  className="absolute top-4 right-4 z-10 text-white hover:text-gray-300 text-2xl font-bold transition-colors duration-200 bg-black bg-opacity-20 rounded-full w-8 h-8 flex items-center justify-center backdrop-blur-sm"
-                >
-                  ×
-                </button>
-                <div className={`h-full transform transition-all duration-300 ease-in-out ${isVisible ? 'translate-x-0 opacity-100' : 'translate-x-4 opacity-0'
+                <div className={`h-full transform transition-all duration-300 ease-in-out ${isVisible ? 'translate-x-0' : 'translate-x-4 opacity-0'
                   }`}>
                   <CompareTweets />
                 </div>
@@ -374,7 +365,7 @@ const SideBar = () => {
           </div>
 
           {/* Click outside to close */}
-          <div
+          <button
             className="absolute inset-0 -z-10"
             onClick={closeModal}
           />

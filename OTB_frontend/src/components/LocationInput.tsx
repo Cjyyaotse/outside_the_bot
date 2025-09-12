@@ -145,7 +145,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
       </div>
 
       {focus && query && (
-        <div className="absolute mt-2 w-full bg-[#000000] rounded-[16px] shadow-sm shadow-[#FFFFFFBF] z-50 max-h-[295px] overflow-y-scroll scrollbar-hide">
+        <div className="absolute mt-2 w-full bg-[#000000] rounded-[16px] shadow-sm shadow-[#FFFFFFBF] max-h-[295px] overflow-y-scroll scrollbar-hide" style={{ zIndex: 1000 }}>
           {isLoading ? (
             <div className="px-4 py-6 text-center">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#1DA1F2] mx-auto mb-2"></div>
