@@ -140,3 +140,12 @@ export const mockSuggestions: LocationSuggestion[] = [
     }
   }
 ];
+
+// utils/constants.ts or in your component file
+export const radiusToZoomMap: Record<string, number> = {
+  "5km": 13,   // Neighborhood level
+  "10km": 12,  // Local area
+  "25km": 11,  // City wide
+  "50km": 10,  // Metropolitan area
+  "100km": 9,  // Regional view
+};

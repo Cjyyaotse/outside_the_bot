@@ -6,10 +6,11 @@ import type { LocationSuggestion } from '../utils/types';
 
 interface MapCanvasProps {
   location?: { lng: number, lat: number };
-  onMapSelect?: (location: LocationSuggestion) => void
+  onMapSelect?: (location: LocationSuggestion) => void;
+  zoomLevel?: number;
 }
 
-const MapCanvas: React.FC<MapCanvasProps> = ({ location, onMapSelect }) => {
+const MapCanvas: React.FC<MapCanvasProps> = ({ location, onMapSelect, zoomLevel = 15 }) => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
 
   const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -27,7 +28,7 @@ const MapCanvas: React.FC<MapCanvasProps> = ({ location, onMapSelect }) => {
         },
       },
       center: [-0.1860, 5.6061], // [longitude, latitude]
-      zoom: 15.5,
+      zoom: zoomLevel,
       pitch: 45,
       bearing: -17.6,
       antialias: true
@@ -106,10 +107,11 @@ const MapCanvas: React.FC<MapCanvasProps> = ({ location, onMapSelect }) => {
     if (location && mapRef.current) {
       mapRef.current.flyTo({
         center: [location.lng, location.lat],
-        zoom: 15
+        zoom: zoomLevel,
+        duration: 800
       })
     }
-  }, [location])
+  }, [location, zoomLevel]);
 
   return (
     <div className="relative h-full w-full">

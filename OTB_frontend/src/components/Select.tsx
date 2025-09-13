@@ -10,10 +10,24 @@ const options = [
   { value: "100km", label: "100km - Regional" },
 ];
 
-const Select = () => {
+interface SelectProps {
+  value?: string;
+  onChange?: (value: string) => void;
+}
+
+const Select: React.FC<SelectProps> = ({ value, onChange }) => {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState(options[2]); // default 25km
   const ref = useRef<HTMLDivElement>(null);
+
+
+  // Set initial value from props if provided
+  useEffect(() => {
+    if (value) {
+      const option = options.find(opt => opt.value === value) || options[2];
+      setSelected(option);
+    }
+  }, [value]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -24,6 +38,12 @@ const Select = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const handleSelect = (option: { value: string; label: string }) => {
+    setSelected(option);
+    setOpen(false);
+    onChange?.(option.value); // Notify parent of change
+  };
 
   return (
     <section ref={ref}>
@@ -54,10 +74,7 @@ const Select = () => {
                 key={option.value}
                 className={`px-4 text-left w-full py-3 cursor-pointer hover:bg-[#16181C] text-white flex items-start gap-3 transition-colors duration-150 ${selected.value === option.value ? "bg-[#16181C]" : ""
                   }`}
-                onClick={() => {
-                  setSelected(option);
-                  setOpen(false);
-                }}
+                onClick={() => handleSelect(option)}
               >
                 {option.label}
               </button>
