@@ -15,6 +15,7 @@ import PigFace from "../assets/avatars/Pig Face.svg";
 import RabbitFace from "../assets/avatars/Rabbit Face.svg";
 import TigerFace from "../assets/avatars/Tiger Face.svg";
 import PolarBear from "../assets/avatars/Polar Bear.svg";
+import type { LocationSuggestion } from "./types";
 
 
 export const tags: TagTypes[] = [
@@ -85,3 +86,57 @@ export const COLORS = [
   "#FFE4A7",
   "#ED647F"
 ]
+
+
+export const mockSuggestions: LocationSuggestion[] = [
+  {
+    id: "1",
+    name: "Greenfield Retail Store",
+    subtitle: { name: "Nairobi, Kenya" },
+    type: "retail_store",
+    coordinates: {
+      lat: -1.2921,
+      lng: 36.8219
+    }
+  },
+  {
+    id: "2",
+    name: "Omotosho Road Basic",
+    subtitle: { name: "Birmingham, UK" },
+    type: "school",
+    coordinates: {
+      lat: 52.4862,
+      lng: -1.8904
+    }
+  },
+  {
+    id: "3",
+    name: "First Rizz Bank",
+    subtitle: { name: "Bali" },
+    type: "bank",
+    coordinates: {
+      lat: -8.3405,
+      lng: 115.0920
+    }
+  },
+  {
+    id: "4",
+    name: "International Locked Centre",
+    subtitle: { name: "South Africa" },
+    type: "shopping_mall",
+    coordinates: {
+      lat: -30.5595,
+      lng: 22.9375
+    }
+  },
+  {
+    id: "5",
+    name: "Public Dance Museum",
+    subtitle: { name: "Denmark" },
+    type: "default",
+    coordinates: {
+      lat: 56.2639,
+      lng: 9.5018
+    }
+  }
+];

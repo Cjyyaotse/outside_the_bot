@@ -4,7 +4,6 @@ import {
   Store,
   Building2,
   Utensils,
-  Car,
   GraduationCap,
   Heart,
   Plane,
@@ -16,26 +15,8 @@ import {
   TreePine,
   Dumbbell
 } from "lucide-react";
-import type { LocationType } from "./SideBar";
+import type { LocationInputProps, LocationSuggestion, LocationType } from "../utils/types";
 
-interface LocationSuggestion {
-  id: string;
-  name: string;
-  subtitle: string;
-  type: LocationType;
-  coordinates?: {
-    lat: number;
-    lng: number;
-  };
-}
-
-interface LocationInputProps {
-  value: string;
-  onChange: (val: string, location?: LocationSuggestion) => void;
-  placeholder?: string;
-  suggestions: LocationSuggestion[];
-  isLoading?: boolean;
-}
 
 const getLocationIcon = (type: LocationType) => {
   const iconProps = { size: 18, className: "text-[#1DA1F2]" };
@@ -76,18 +57,27 @@ const LocationInput: React.FC<LocationInputProps> = ({
   onChange,
   placeholder,
   suggestions,
-  isLoading = false
+  isLoading = false,
+  externalLocation
 }) => {
 
   const [focus, setFocus] = useState(false);
   const [query, setQuery] = useState(value);
+  const [querCoord, setQuerCoord] = useState<{ lat: number; lng: number } | null>(null);
   const divRef = useRef<HTMLDivElement>(null);
 
-  const filteredSuggestions = suggestions.filter(
-    (item) =>
-      item.name.toLowerCase().includes(query.toLowerCase()) ||
-      item.subtitle.toLowerCase().includes(query.toLowerCase())
-  );
+
+  useEffect(() => {
+    if (externalLocation) {
+      // When map is clicked, set query to lat/lng string
+      const { name, subtitle } = externalLocation;
+
+      console.log("externalLocation changed:", externalLocation);
+      onChange(`${name}, ${subtitle.name}, ${subtitle.wikidata_id}`, externalLocation);
+      setQuery(`${name}, ${subtitle.name}, ${subtitle.wikidata_id}`);
+    }
+  }, [externalLocation]);
+
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -100,9 +90,10 @@ const LocationInput: React.FC<LocationInputProps> = ({
   }, []);
 
   const handleSelect = (suggestion: LocationSuggestion) => {
-    const fullLocation = `${suggestion.name}, ${suggestion.subtitle}`;
+    const fullLocation = `${suggestion.name}, ${suggestion.subtitle.name}, ${suggestion.subtitle.wikidata_id}`;
     onChange(fullLocation, suggestion);
     setQuery(fullLocation);
+    setQuerCoord(suggestion.coordinates || null);
     setFocus(false);
   };
 
@@ -123,6 +114,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
             onChange(e.target.value);
           }}
         />
+        {/* <p className="absolute bottom-1 right-[30%] text-xs text-nowrap">{querCoord?.lat}, {querCoord?.lng}</p> */}
         {isLoading && (
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#1DA1F2] mr-2"></div>
         )}
@@ -135,8 +127,8 @@ const LocationInput: React.FC<LocationInputProps> = ({
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#1DA1F2] mx-auto mb-2"></div>
               <p className="text-gray-400 text-sm">Searching locations...</p>
             </div>
-          ) : filteredSuggestions.length > 0 ? (
-            filteredSuggestions.map((item) => (
+          ) : suggestions.length > 0 ? (
+            suggestions.map((item) => (
               <button
                 key={item.id}
                 className="px-4 text-left w-full py-3 cursor-pointer hover:bg-[#16181C] text-white flex items-start gap-3 transition-colors duration-150"
@@ -147,7 +139,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm text-white truncate">{item.name}</p>
-                  <p className="text-sm text-[#71767B] font-normal truncate">{item.subtitle}</p>
+                  <p className="text-sm text-[#71767B] font-normal truncate">{item.subtitle.name}, {item.subtitle.wikidata_id}</p>
                 </div>
               </button>
             ))
