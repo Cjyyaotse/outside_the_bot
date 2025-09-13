@@ -73,8 +73,8 @@ const LocationInput: React.FC<LocationInputProps> = ({
       const { name, subtitle } = externalLocation;
 
       console.log("externalLocation changed:", externalLocation);
-      onChange(`${name}, ${subtitle.name}, ${subtitle.wikidata_id}`, externalLocation);
-      setQuery(`${name}, ${subtitle.name}, ${subtitle.wikidata_id}`);
+      onChange(`${name}, ${subtitle?.name}, ${subtitle?.wikidata_id}`, externalLocation);
+      setQuery(`${name}, ${subtitle?.name}, ${subtitle?.wikidata_id}`);
     }
   }, [externalLocation]);
 
@@ -90,7 +90,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
   }, []);
 
   const handleSelect = (suggestion: LocationSuggestion) => {
-    const fullLocation = `${suggestion.name}, ${suggestion.subtitle.name}, ${suggestion.subtitle.wikidata_id}`;
+    const fullLocation = `${suggestion.name}, ${suggestion.subtitle?.name}, ${suggestion.subtitle?.wikidata_id}`;
     onChange(fullLocation, suggestion);
     setQuery(fullLocation);
     setQuerCoord(suggestion.coordinates || null);
@@ -139,7 +139,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm text-white truncate">{item.name}</p>
-                  <p className="text-sm text-[#71767B] font-normal truncate">{item.subtitle.name}, {item.subtitle.wikidata_id}</p>
+                  <p className="text-sm text-[#71767B] font-normal truncate">{item.subtitle?.name}, {item.subtitle?.wikidata_id}</p>
                 </div>
               </button>
             ))
