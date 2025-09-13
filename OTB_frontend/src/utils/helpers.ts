@@ -1,3 +1,5 @@
+import type { LocationType } from "./types";
+
 export async function reverseGeocode(lng: number, lat: number) {
   const token = import.meta.env.VITE_DEFAULT_PUBLIC_TOKEN;
   const url = `https://api.mapbox.com/search/geocode/v6/reverse?longitude=${lng}&latitude=${lat}&access_token=${token}`;
@@ -12,7 +14,7 @@ export async function reverseGeocode(lng: number, lat: number) {
       id: f.id,
       name: f.properties?.name || f.text || "Unknown",
       subtitle: f.properties?.context?.place || f.properties?.full_address || "",
-      type: "default",
+      type: "default" as LocationType,
       coordinates: {
         lat,
         lng

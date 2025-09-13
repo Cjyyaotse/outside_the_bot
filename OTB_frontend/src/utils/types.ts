@@ -62,7 +62,7 @@ export type LocationType =
 export interface LocationSuggestion {
   id: string;
   name: string;
-  subtitle: {
+  subtitle?: {
     name: string;
     wikidata_id?: string;
   };
@@ -71,6 +71,7 @@ export interface LocationSuggestion {
     lat: number;
     lng: number;
   };
+  activeInputIndex?: number; // New optional property
 }
 
 export interface LocationInputProps {
@@ -80,4 +81,5 @@ export interface LocationInputProps {
   suggestions: LocationSuggestion[];
   isLoading?: boolean;
   externalLocation?: LocationSuggestion// New prop for external location
+  onFocus?: () => void; // New prop for focus event
 }
