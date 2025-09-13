@@ -55,7 +55,7 @@ const Select: React.FC<SelectProps> = ({ value, onChange }) => {
         </div>
 
         {/* Selected box */}
-        <div
+        <button
           className="flex items-center justify-between h-[48px] w-full border border-[#808080] rounded-full px-4 bg-transparent text-white cursor-pointer"
           onClick={() => setOpen(!open)}
         >
@@ -64,7 +64,7 @@ const Select: React.FC<SelectProps> = ({ value, onChange }) => {
             className={`transition-transform ${open ? "rotate-180" : ""}`}
             size={20}
           />
-        </div>
+        </button>
 
         {/* Dropdown */}
         {open && (

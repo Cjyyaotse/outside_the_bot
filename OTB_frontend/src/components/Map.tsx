@@ -103,7 +103,6 @@ const MapCanvas: React.FC<MapCanvasProps> = ({ location, onMapSelect, zoomLevel 
   }, []);
 
   useEffect(() => {
-    console.log("Flying to location:", location);
     if (location && mapRef.current) {
       mapRef.current.flyTo({
         center: [location.lng, location.lat],

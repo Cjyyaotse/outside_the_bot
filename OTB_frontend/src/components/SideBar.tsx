@@ -12,6 +12,7 @@ import TweetResults from "../components/TweetResults"
 import CompareTweets from "../components/CompareTweets"
 import { searchLocations } from "./MapBoxSearch"
 import type { LocationSuggestion } from "../utils/types"
+import { useDebounce } from "../hooks/useDebounce"
 
 
 
@@ -37,11 +38,12 @@ const SideBar = ({ onInputSelectLocation, mapSelect, radius, onRadiusChange }: S
   const [isVisible, setIsVisible] = useState(false);
 
   const [query, setQuery] = useState("");
+  const debouncedQuery = useDebounce(query, 300);
+
   const [suggestionsList, setSuggestionsList] = useState<LocationSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
 
   const [activeInputIndex, setActiveInputIndex] = useState<number | null>(null);
-  // const []
 
   // consolidating data from all fields on sidebar
   // to pass to analysis or comparison modals
@@ -49,8 +51,9 @@ const SideBar = ({ onInputSelectLocation, mapSelect, radius, onRadiusChange }: S
     return {
       locations: locations.map(loc => loc.selectedLocation?.coordinates).filter(Boolean),
       radius,
+      topics: typing.split(',').map(t => t.trim()).filter(Boolean)
     };
-  };  
+  };
 
   // Add this function to handle input focus
   const handleInputFocus = (index: number) => {
@@ -58,7 +61,7 @@ const SideBar = ({ onInputSelectLocation, mapSelect, radius, onRadiusChange }: S
   };
 
   useEffect(() => {
-    if (!query) {
+    if (!debouncedQuery.trim()) {
       setSuggestionsList([])
       return;
     }
@@ -66,7 +69,7 @@ const SideBar = ({ onInputSelectLocation, mapSelect, radius, onRadiusChange }: S
     let active = true;
     setLoading(true);
 
-    searchLocations(query).then((results) => {
+    searchLocations(debouncedQuery).then((results) => {
       if (active) {
         setSuggestionsList(results);
         setLoading(false)
@@ -77,7 +80,7 @@ const SideBar = ({ onInputSelectLocation, mapSelect, radius, onRadiusChange }: S
       active = false;
     }
 
-  }, [query])
+  }, [debouncedQuery])
 
 
   const addLocation = () => {
@@ -92,6 +95,10 @@ const SideBar = ({ onInputSelectLocation, mapSelect, radius, onRadiusChange }: S
     setLocations(updated);
   };
 
+  useEffect(() => {
+    const data = getConsolidatedData()
+    console.log("Consolidated Sidebar Data:", getConsolidatedData());
+  }, [locations, radius, typing]);
 
   const closeModal = () => {
     setIsAnimating(true);
@@ -143,6 +150,10 @@ const SideBar = ({ onInputSelectLocation, mapSelect, radius, onRadiusChange }: S
   const handleShowMore = () => {
     openModal('echogrid');
   };
+
+  const handleChangeTopics = (topics: string[]) => {
+    setTyping(topics.join(', '));
+  }
 
   // Check if compare button should be enabled
   const canCompareRegions = locations.filter(loc => loc.selectedLocation).length >= 2;
@@ -223,7 +234,7 @@ const SideBar = ({ onInputSelectLocation, mapSelect, radius, onRadiusChange }: S
             <img src={Search} alt='search' className='w-[20px] h-[20px]' />
             <p className='text-[#808080] font-semibold text-[16px]'>Topic Filter</p>
           </div>
-          <Input onChange={(e) => setTyping(e.target.value)} isText={typing} className='h-[48px]' placeholder={<p className='text-[#808080]'>Enter keywords</p>} borderColor="border-[#808080]" />
+          <Input onChange={(e) => setTyping(e.target.value)} value={typing} className='h-[48px]' />
         </div>
 
         {/* Popular tags */}
@@ -277,7 +288,7 @@ const SideBar = ({ onInputSelectLocation, mapSelect, radius, onRadiusChange }: S
         >
           {/* EchoGrid Modal */}
           {activeModal === 'echogrid' && (
-            <EchoGridModal onClick={closeModal} />
+            <EchoGridModal onClick={closeModal} onChangeTopics={handleChangeTopics} />
           )}
 
           {/* Right-side Modal Container */}
