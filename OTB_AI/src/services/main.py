@@ -66,7 +66,7 @@ Response should have some decent level of humor, format text in plain language a
 like symbols.
 Return the output in strict JSON format with the following keys:
 1. "description": a brief sentence or two summarizing the common topic of conversation.
-2. "emoji_text": a few emojis that represent the theme.
+2. "trending topics": four comma separated words that will tell the trending topics.
 
 Tweets context:
 ---------------------
@@ -122,6 +122,6 @@ if __name__ == "__main__":
 
     context_text = prepare_context_text(results)  # ✅ convert results to text
     prompt = build_prompt(context_text)
-    result = run_mistral_json(prompt, context_text)
+    result = get_llm_response(prompt, context_text)
 
     print(result)
