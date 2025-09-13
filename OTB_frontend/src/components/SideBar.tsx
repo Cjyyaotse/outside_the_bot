@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import Input from "./Input"
 import Search from "../assets/icons/Search.svg"
-import { tags } from "../constants"
+import { tags } from "../utils/constants"
 import Tag from "./Tag"
 import Plus from "../assets/icons/Plus"
 import Select from "./Select"
@@ -10,88 +10,10 @@ import LocationInput from "./LocationInput"
 import EchoGridModal from "../components/EchoGridModal"
 import TweetResults from "../components/TweetResults"
 import CompareTweets from "../components/CompareTweets"
+import { searchLocations } from "./MapBoxSearch"
+import type { LocationSuggestion } from "../utils/types"
 
 
-export const mockSuggestions: LocationSuggestion[] = [
-  {
-    id: "1",
-    name: "Greenfield Retail Store",
-    subtitle: "Nairobi, Kenya",
-    type: "retail_store",
-    coordinates: {
-      lat: -1.2921,
-      lng: 36.8219
-    }
-  },
-  {
-    id: "2",
-    name: "Omotosho Road Basic",
-    subtitle: "Birmingham, UK",
-    type: "school",
-    coordinates: {
-      lat: 52.4862,
-      lng: -1.8904
-    }
-  },
-  {
-    id: "3",
-    name: "First Rizz Bank",
-    subtitle: "Bali",
-    type: "bank",
-    coordinates: {
-      lat: -8.3405,
-      lng: 115.0920
-    }
-  },
-  {
-    id: "4",
-    name: "International Locked Centre",
-    subtitle: "South Africa",
-    type: "shopping_mall",
-    coordinates: {
-      lat: -30.5595,
-      lng: 22.9375
-    }
-  },
-  {
-    id: "5",
-    name: "Public Dance Museum",
-    subtitle: "Denmark",
-    type: "default",
-    coordinates: {
-      lat: 56.2639,
-      lng: 9.5018
-    }
-  }
-];
-
-// Import the types from your LocationInput component
-export interface LocationSuggestion {
-  id: string;
-  name: string;
-  subtitle: string;
-  type: LocationType;
-  coordinates?: {
-    lat: number;
-    lng: number;
-  };
-}
-
-export type LocationType =
-  | 'restaurant'
-  | 'retail_store'
-  | 'bank'
-  | 'hospital'
-  | 'school'
-  | 'hotel'
-  | 'gas_station'
-  | 'cafe'
-  | 'airport'
-  | 'residential'
-  | 'shopping_mall'
-  | 'park'
-  | 'gym'
-  | 'default';
 
 type ModalType = 'echogrid' | 'search' | 'compare' | null;
 
@@ -100,35 +22,39 @@ interface LocationData {
   selectedLocation?: LocationSuggestion;
 }
 
-const SideBar = () => {
+const SideBar = ({ onInputSelectLocation, mapSelect }: { onInputSelectLocation: (lng: number, lat: number, place: string) => void, mapSelect: LocationSuggestion | undefined }) => {
   const [typing, setTyping] = useState("")
   const [locations, setLocations] = useState<LocationData[]>([{ query: "" }]);
-  const [locationSuggestions, setLocationSuggestions] = useState<LocationSuggestion[]>(mockSuggestions);
-  const [isLoadingLocations, setIsLoadingLocations] = useState(false);
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
-  // Fetch location suggestions from your API
-  const fetchLocationSuggestions = async (query: string) => {
-    if (query.length < 2) {
-      setLocationSuggestions([]);
+  const [query, setQuery] = useState("");
+  const [suggestionsList, setSuggestionsList] = useState<LocationSuggestion[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!query) {
+      setSuggestionsList([])
       return;
     }
 
-    setIsLoadingLocations(true);
-    try {
-      // Replace with your actual API endpoint
-      const response = await fetch(`/api/locations?q=${encodeURIComponent(query)}`);
-      const data = await response.json();
-      setLocationSuggestions(data);
-    } catch (error) {
-      console.error('Failed to fetch location suggestions:', error);
-      setLocationSuggestions([]);
-    } finally {
-      setIsLoadingLocations(false);
+    let active = true;
+    setLoading(true);
+
+    searchLocations(query).then((results) => {
+      if (active) {
+        setSuggestionsList(results);
+        setLoading(false)
+      }
+    })
+
+    return () => {
+      active = false;
     }
-  };
+
+  }, [query])
+
 
   const addLocation = () => {
     if (locations.length < 2) {
@@ -142,26 +68,6 @@ const SideBar = () => {
     setLocations(updated);
   };
 
-  const handleLocationChange = (index: number) => (query: string, selectedLocation?: LocationSuggestion) => {
-    const updated = [...locations];
-    updated[index] = {
-      query,
-      selectedLocation
-    };
-    setLocations(updated);
-
-    // Fetch suggestions when user types
-    if (!selectedLocation && query !== updated[index]?.query) {
-      fetchLocationSuggestions(query);
-    }
-
-    // Log selected location data for your analytics
-    if (selectedLocation) {
-      console.log('Selected location:', selectedLocation);
-      // You can use the coordinates, type, etc. here
-      // Example: updateMapCenter(selectedLocation.coordinates);
-    }
-  };
 
   const closeModal = () => {
     setIsAnimating(true);
@@ -233,10 +139,24 @@ const SideBar = () => {
             <div key={index} className="flex items-center gap-2">
               <LocationInput
                 value={locationData.query}
-                onChange={handleLocationChange(index)}
+                onChange={(val, location) => {
+                  setQuery(val);
+                  const updated = [...locations];
+                  updated[index] = {
+                    query: val,
+                    selectedLocation: location,
+                  };
+                  setLocations(updated);
+
+                  // Inform parent (App) so map flies
+                  if (location?.coordinates) {
+                    onInputSelectLocation(location.coordinates.lng, location.coordinates.lat, val);
+                  }
+                }}
                 placeholder={`Location ${index + 1}`}
-                suggestions={locationSuggestions}
-                isLoading={isLoadingLocations}
+                suggestions={suggestionsList}
+                isLoading={loading}
+                externalLocation={mapSelect}
               />
 
               {index === 0 ? (
@@ -278,15 +198,15 @@ const SideBar = () => {
           <p className='text-[#CBD5E0] text-[12px] font-normal'>Popular:</p>
           {
             tags.slice(0, 4).map((item, index) => (
-              <Tag name={item.name} key={index} />
+              <Tag name={item.name} key={`${item.name}_${index}`} />
             ))
           }
-          <p
+          <button
             className="text-[12px] font-normal text-[#1DA1F2] cursor-pointer"
             onClick={handleShowMore}
           >
             show more
-          </p>
+          </button>
         </div>
 
         {/* Action Buttons */}
@@ -319,7 +239,7 @@ const SideBar = () => {
       {/* Modal Overlay - keeping your existing modal code */}
       {activeModal && (
         <div
-          className={`fixed inset-0 z-50 transition-all duration-300 ease-in-out ${isVisible ? '' : 'bg-transparent'
+          className={`fixed inset-0 z-50 transition-all duration-300 ease-in-out ${isVisible ? 'bg-black/50' : 'bg-transparent'
             }`}
         >
           {/* EchoGrid Modal */}

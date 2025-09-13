@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import FilterIcon from "../assets/icons/FilterIcon.svg";
+import { ChevronDown } from "lucide-react";
 
 const options = [
   { value: "5km", label: "5km - Neighborhood" },
@@ -39,10 +40,10 @@ const Select = () => {
           onClick={() => setOpen(!open)}
         >
           <span>{selected.label}</span>
-          {/* <ChevronDown
+          <ChevronDown
             className={`transition-transform ${open ? "rotate-180" : ""}`}
             size={20}
-          /> */}
+          />
         </div>
 
         {/* Dropdown */}

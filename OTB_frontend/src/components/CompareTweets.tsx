@@ -1,125 +1,123 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import TrendingIcon from '../assets/icons/TrendingIcon.svg'
 import { MapPin, Upload, X } from 'lucide-react';
 import Tag from './Tag';
+import Verified from "../assets/icons/Verified.svg"
+import { AVATARS, COLORS, USERNAMES } from '../utils/constants';
+import type { CompareTweetsProps, LocationData, RawTweetData, UserPost } from '../utils/types';
 
 
-interface TrendingTopic {
-  id: string;
-  label: string;
-}
 
-interface UserPost {
-  id: string;
-  username: string;
-  handle: string;
-  avatar: string;
-  content: string;
-  timeAgo: string;
-  verified?: boolean;
-}
+// Utility function to get a consistent random index based on tweet ID
+const getSeededRandomIndex = (id: string, arrayLength: number): number => {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    const char = id.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash) % arrayLength;
+};
 
-interface LocationData {
-  name: string;
-  trendingTopics: TrendingTopic[];
-  posts: UserPost[];
-}
+// Function to format raw tweets into display-ready user posts
+const formatTweetsForDisplay = (rawTweets: RawTweetData[]): UserPost[] => {
+  return rawTweets.map((tweet) => {
+    const usernameIndex = getSeededRandomIndex(tweet.id, USERNAMES.length);
+    const avatarIndex = getSeededRandomIndex(tweet.id + '_avatar', AVATARS.length);
+    const bgColorIndex = getSeededRandomIndex(tweet.id + '_color', COLORS.length);
+    const selectedUsername = USERNAMES[usernameIndex];
 
-const CompareTweets: React.FC = () => {
-  const londonData: LocationData = {
-    name: 'London',
-    trendingTopics: [
-      { id: '1', label: 'crypto' },
-      { id: '2', label: 'sports' },
-      { id: '3', label: 'politics' },
-      { id: '4', label: 'food' }
-    ],
-    posts: [
-      {
-        id: '1',
-        username: 'gentheagoatwarrior',
-        handle: '@gentheagoatwarrior',
-        avatar: 'blue',
-        content: 'How will this work when you have spunks leaving their trash all over the the site.',
-        timeAgo: '1h',
-        verified: true
-      },
-      {
-        id: '2',
-        username: 'thenamesKeqla',
-        handle: '@thenamesKeqla',
-        avatar: 'gray',
-        content: 'How will this work when you have spunks leaving their trash all over the the site.',
-        timeAgo: '7h',
-        verified: true
-      },
-      {
-        id: '3',
-        username: 'HamsterDumpster_Billy',
-        handle: '@HamsterDumpster_Billy',
-        avatar: 'orange',
-        content: 'How will this work when you have spunks leaving their trash all over the the site.',
-        timeAgo: '12h',
-        verified: true
-      },
-      {
-        id: '4',
-        username: 'BearsCore237',
-        handle: '@BearsCore237',
-        avatar: 'pink',
-        content: 'How will this work when you have spunks leaving their trash all over the the site.',
-        timeAgo: '17h',
-        verified: false
-      }
-    ]
-  };
-
-  const istanbulData: LocationData = {
-    name: 'Istanbul',
-    trendingTopics: [
-      { id: '1', label: 'food' },
-      { id: '2', label: 'houses' },
-      { id: '3', label: 'politics' },
-      { id: '4', label: 'food' },
-      { id: '5', label: 'food' },
-      { id: '6', label: 'food' },
-      { id: '7', label: 'food' },
-      { id: '8', label: 'food' },
-      { id: '9', label: 'food' }
-    ],
-    posts: [
-      {
-        id: '1',
-        username: 'gentheagoatwarrior',
-        handle: '@gentheagoatwarrior',
-        avatar: 'blue',
-        content: 'How will this work when you have spunks leaving their trash all over the the site.',
-        timeAgo: '1h',
-        verified: true
-      },
-      {
-        id: '2',
-        username: 'BearsCore237',
-        handle: '@BearsCore237',
-        avatar: 'pink',
-        content: 'How will this work when you have spunks leaving their trash all over the the site.',
-        timeAgo: '17h',
-        verified: false
-      }
-    ]
-  };
-
-  const getAvatarBgColor = (color: string): string => {
-    const colorMap: { [key: string]: string } = {
-      blue: 'bg-blue-500',
-      gray: 'bg-gray-500',
-      orange: 'bg-orange-500',
-      pink: 'bg-pink-500'
+    return {
+      id: tweet.id,
+      username: selectedUsername,
+      handle: `@${selectedUsername}`,
+      avatar: AVATARS[avatarIndex],
+      content: tweet.content,
+      timeAgo: tweet.timeAgo,
+      verified: tweet.verified || Math.random() > 0.7, // 30% chance of being verified if not specified
+      bgColor: COLORS[bgColorIndex]
     };
-    return colorMap[color] || 'bg-gray-500';
-  };
+  });
+};
 
-  const renderLocationPanel = (data: LocationData) => (
+const CompareTweets: React.FC<CompareTweetsProps> = ({ locationData }) => {
+  // Default mock data for development/fallback
+  const defaultLocationData: LocationData[] = [
+    {
+      name: 'London',
+      trendingTopics: [
+        { id: '1', label: 'crypto' },
+        { id: '2', label: 'sports' },
+        { id: '3', label: 'politics' },
+        { id: '4', label: 'food' }
+      ],
+      searchTerm: 'music',
+      rawTweets: [
+        {
+          id: 'london_1',
+          content: 'How will this work when you have spunks leaving their trash all over the the site.',
+          timeAgo: '1h',
+          verified: true
+        },
+        {
+          id: 'london_2',
+          content: 'Just discovered an amazing new music venue in London! The acoustics are incredible.',
+          timeAgo: '7h',
+          verified: true
+        },
+        {
+          id: 'london_3',
+          content: 'The underground music scene here is absolutely thriving right now.',
+          timeAgo: '12h',
+          verified: false
+        },
+        {
+          id: 'london_4',
+          content: 'Anyone know good spots for live jazz? Looking for recommendations.',
+          timeAgo: '17h',
+          verified: false
+        }
+      ]
+    },
+    {
+      name: 'Istanbul',
+      trendingTopics: [
+        { id: '1', label: 'food' },
+        { id: '2', label: 'houses' },
+        { id: '3', label: 'politics' },
+        { id: '4', label: 'culture' },
+        { id: '5', label: 'tourism' }
+      ],
+      searchTerm: 'music',
+      rawTweets: [
+        {
+          id: 'istanbul_1',
+          content: 'The traditional Turkish music scene is incredible here in Istanbul.',
+          timeAgo: '2h',
+          verified: true
+        },
+        {
+          id: 'istanbul_2',
+          content: 'Best city for fusion of eastern and western musical styles.',
+          timeAgo: '8h',
+          verified: false
+        }
+      ]
+    }
+  ];
+
+  // Use provided data or fallback to mock data
+  const dataToUse = locationData || defaultLocationData;
+
+  // Format tweets for each location
+  const formattedLocationData = useMemo(() => {
+    return dataToUse.map(location => ({
+      ...location,
+      formattedPosts: formatTweetsForDisplay(location.rawTweets)
+    }));
+  }, [dataToUse]);
+
+  const renderLocationPanel = (data: LocationData & { formattedPosts: UserPost[] }) => (
     <div className="flex-1 h-[100vh] overflow-auto custom-scrollbar text-white">
       {/* Header */}
       <div className="flex items-center gap-2 p-4">
@@ -128,10 +126,10 @@ const CompareTweets: React.FC = () => {
       </div>
 
       {/* Search Description */}
-      <div className="px-4 pb-[24px] border-b border-[#333639] ">
+      <div className="px-4 pb-[24px] border-b border-[#333639]">
         <div className='p-[20px] rounded-[20px] bg-transparent border-[1px] border-[#333639]'>
           <p className="text-sm text-gray-300 leading-relaxed">
-            Looking for "music" in London? The search is a bit quiet right now, but conversations about this topic do happen here!
+            Looking for "{data.searchTerm || 'music'}" in {data.name}? The search is a bit quiet right now, but conversations about this topic do happen here!
           </p>
         </div>
       </div>
@@ -151,12 +149,25 @@ const CompareTweets: React.FC = () => {
 
       {/* User Posts */}
       <div className="flex-1">
-        {data.posts.map((post) => (
+        {data.formattedPosts.map((post) => (
           <div key={post.id} className="p-4 border-b border-slate-700 hover:bg-slate-800/50 transition-colors cursor-pointer">
             <div className="flex gap-3">
               {/* Avatar */}
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-medium ${getAvatarBgColor(post.avatar)}`}>
-                {post.username.slice(0, 2).toUpperCase()}
+              <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden p-2" style={{ backgroundColor: post.bgColor }}>
+                <img
+                  src={post.avatar}
+                  alt={post.username}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // Fallback to initials if image fails to load
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    target.nextElementSibling!.textContent = post.username.slice(0, 2).toUpperCase();
+                  }}
+                />
+                <span className="text-white text-sm font-medium hidden">
+                  {post.username.slice(0, 2).toUpperCase()}
+                </span>
               </div>
 
               {/* Content */}
@@ -164,9 +175,7 @@ const CompareTweets: React.FC = () => {
                 <div className="flex items-center gap-1 mb-1">
                   <span className="font-medium text-sm truncate">{post.username}</span>
                   {post.verified && (
-                    <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                      <div className="w-2 h-2 bg-white rounded-full"></div>
-                    </div>
+                    <img src={Verified} alt="Verified" />
                   )}
                   <span className="text-gray-500 text-sm">•</span>
                   <span className="text-gray-500 text-sm">{post.timeAgo}</span>
@@ -202,14 +211,17 @@ const CompareTweets: React.FC = () => {
 
       {/* Split Panel Content */}
       <div className="flex">
-        {/* Left Panel - London */}
-        {renderLocationPanel(londonData)}
+        {formattedLocationData.map((location, index) => (
+          <React.Fragment key={location.name}>
+            {/* Location Panel */}
+            {renderLocationPanel(location)}
 
-        {/* Divider */}
-        <div className="w-px bg-slate-700"></div>
-
-        {/* Right Panel - Istanbul */}
-        {renderLocationPanel(istanbulData)}
+            {/* Divider (except for last panel) */}
+            {index < formattedLocationData.length - 1 && (
+              <div className="w-px bg-slate-700"></div>
+            )}
+          </React.Fragment>
+        ))}
       </div>
     </div>
   );

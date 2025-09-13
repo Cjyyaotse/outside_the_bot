@@ -1,11 +1,16 @@
+import { useState } from 'react'
 import './App.css'
 import XLogo from "./assets/icons/XLogo.svg"
 import GradientBox from './components/GradientBox'
 import MapCanvas from './components/Map'
 import SideBar from './components/SideBar'
+import type { LocationSuggestion } from './utils/types'
 
 
 function App() {
+  const [selected, setSelected] = useState<{ lng: number; lat: number; place: string }>();
+
+  const [mapSelect, setMapSelect] = useState<LocationSuggestion>();
 
   return (
     <main className='font-manrope flex h-full w-[100vw]'>
@@ -20,11 +25,13 @@ function App() {
           <GradientBox value='2.47M' title='Conversations' />
         </section>
 
-        <SideBar />
+        <SideBar onInputSelectLocation={(lng, lat, place) =>
+          setSelected({ lng, lat, place })
+        } mapSelect = {mapSelect} />
       </section>
 
       <div className='flex-1 p-4 max-h-[100vh]'>
-        <MapCanvas />
+        <MapCanvas location={selected}  onMapSelect={setMapSelect} />
       </div>
     </main>
   )
