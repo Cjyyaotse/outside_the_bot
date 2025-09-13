@@ -5,12 +5,15 @@ import GradientBox from './components/GradientBox'
 import MapCanvas from './components/Map'
 import SideBar from './components/SideBar'
 import type { LocationSuggestion } from './utils/types'
+import { radiusToZoomMap } from './utils/constants'
 
 
 function App() {
   const [selected, setSelected] = useState<{ lng: number; lat: number; place: string }>();
 
   const [mapSelect, setMapSelect] = useState<LocationSuggestion>();
+  const [radius, setRadius] = useState<string>("25km"); // Default radius
+
 
   return (
     <main className='font-manrope flex h-full w-[100vw]'>
@@ -27,11 +30,11 @@ function App() {
 
         <SideBar onInputSelectLocation={(lng, lat, place) =>
           setSelected({ lng, lat, place })
-        } mapSelect = {mapSelect} />
+        } mapSelect={mapSelect} radius={radius} onRadiusChange={setRadius} />
       </section>
 
       <div className='flex-1 p-4 max-h-[100vh]'>
-        <MapCanvas location={selected}  onMapSelect={setMapSelect} />
+        <MapCanvas location={selected} onMapSelect={setMapSelect} zoomLevel={radiusToZoomMap[radius]} />
       </div>
     </main>
   )

@@ -22,7 +22,14 @@ interface LocationData {
   selectedLocation?: LocationSuggestion;
 }
 
-const SideBar = ({ onInputSelectLocation, mapSelect }: { onInputSelectLocation: (lng: number, lat: number, place: string) => void, mapSelect: LocationSuggestion | undefined }) => {
+interface SideBarProps {
+  onInputSelectLocation: (lng: number, lat: number, place: string) => void;
+  mapSelect: LocationSuggestion | undefined;
+  radius: string;
+  onRadiusChange: (radius: string) => void;
+}
+
+const SideBar = ({ onInputSelectLocation, mapSelect, radius, onRadiusChange }: SideBarProps) => {
   const [typing, setTyping] = useState("")
   const [locations, setLocations] = useState<LocationData[]>([{ query: "" }]);
   const [activeModal, setActiveModal] = useState<ModalType>(null);
@@ -32,6 +39,13 @@ const SideBar = ({ onInputSelectLocation, mapSelect }: { onInputSelectLocation: 
   const [query, setQuery] = useState("");
   const [suggestionsList, setSuggestionsList] = useState<LocationSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const [activeInputIndex, setActiveInputIndex] = useState<number | null>(null);
+
+  // Add this function to handle input focus
+  const handleInputFocus = (index: number) => {
+    setActiveInputIndex(index);
+  };
 
   useEffect(() => {
     if (!query) {
@@ -153,11 +167,14 @@ const SideBar = ({ onInputSelectLocation, mapSelect }: { onInputSelectLocation: 
                     onInputSelectLocation(location.coordinates.lng, location.coordinates.lat, val);
                   }
                 }}
+                onFocus={() => handleInputFocus(index)}
+                isActive={activeInputIndex === index}
                 placeholder={`Location ${index + 1}`}
                 suggestions={suggestionsList}
                 isLoading={loading}
                 externalLocation={mapSelect}
               />
+
 
               {index === 0 ? (
                 <Plus
@@ -177,11 +194,17 @@ const SideBar = ({ onInputSelectLocation, mapSelect }: { onInputSelectLocation: 
               Hit + to enable Compare Regions button
             </p>
           )}
+
+          {activeInputIndex !== null && (
+            <p className="text-[#1DA1F2] text-[10px] mt-1 text-">
+              Click on the map to set location for {`Location ${activeInputIndex + 1}`}
+            </p>
+          )}
         </div>
 
         {/* Search Radius */}
         <div className='space-y-2'>
-          <Select />
+          <Select value={radius} onChange={onRadiusChange} />
         </div>
 
         {/* Topic Filter */}

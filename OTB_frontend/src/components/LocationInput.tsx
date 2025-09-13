@@ -58,7 +58,9 @@ const LocationInput: React.FC<LocationInputProps> = ({
   placeholder,
   suggestions,
   isLoading = false,
-  externalLocation
+  externalLocation,
+  onFocus,
+  isActive = false
 }) => {
 
   const [focus, setFocus] = useState(false);
@@ -67,18 +69,23 @@ const LocationInput: React.FC<LocationInputProps> = ({
   const divRef = useRef<HTMLDivElement>(null);
 
 
-  useEffect(() => {
-    if (externalLocation) {
-      // When map is clicked, set query to lat/lng string
-      const { name, subtitle } = externalLocation;
 
-      console.log("externalLocation changed:", externalLocation);
-      onChange(`${name}, ${subtitle?.name}, ${subtitle?.wikidata_id}`, externalLocation);
-      setQuery(`${name}, ${subtitle?.name}, ${subtitle?.wikidata_id}`);
+
+  const handleSelect = (suggestion: LocationSuggestion) => {
+    const fullLocation = `${suggestion.name}, ${suggestion.subtitle?.name}, ${suggestion.subtitle?.wikidata_id}`;
+    onChange(fullLocation, suggestion);
+    setQuery(fullLocation);
+    setQuerCoord(suggestion.coordinates || null);
+    setFocus(false);
+
+    // Reset active input after selection
+    if (typeof onFocus === 'function') {
+      // This will notify parent to reset activeInputIndex
+      onFocus();
     }
-  }, [externalLocation]);
+  };
 
-
+  // Close suggestions when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (divRef.current && !divRef.current.contains(event.target as Node)) {
@@ -89,13 +96,15 @@ const LocationInput: React.FC<LocationInputProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSelect = (suggestion: LocationSuggestion) => {
-    const fullLocation = `${suggestion.name}, ${suggestion.subtitle?.name}, ${suggestion.subtitle?.wikidata_id}`;
-    onChange(fullLocation, suggestion);
-    setQuery(fullLocation);
-    setQuerCoord(suggestion.coordinates || null);
-    setFocus(false);
-  };
+  // If isActive prop changes, update focus state
+  useEffect(() => {
+    // Only update if this input is active and there's an external location
+    if (isActive && externalLocation) {
+      const { name, subtitle } = externalLocation;
+      onChange(`${name}, ${subtitle?.name}, ${subtitle?.wikidata_id}`, externalLocation);
+      setQuery(`${name}, ${subtitle?.name}, ${subtitle?.wikidata_id}`);
+    }
+  }, [externalLocation, isActive]);
 
   return (
     <div className="relative w-full" ref={divRef}>
@@ -103,12 +112,15 @@ const LocationInput: React.FC<LocationInputProps> = ({
         className={`flex items-center border-[2px] rounded-full px-[6px] h-[60px] py-[8px] relative ${focus ? "border-[#1DA1F2] bg-[#1DA1F21A]" : "border-white"
           }`}
       >
-        <MapPin size={20} className="text-white mr-2" />
+        <MapPin size={20} className="text-white mx-2" />
         <input
           className="bg-transparent h-full w-full focus:outline-none text-white z-50"
           placeholder={placeholder}
           value={query}
-          onFocus={() => setFocus(true)}
+          onFocus={() => {
+            setFocus(true);
+            onFocus?.();
+          }}
           onChange={(e) => {
             setQuery(e.target.value);
             onChange(e.target.value);

@@ -81,5 +81,6 @@ export interface LocationInputProps {
   suggestions: LocationSuggestion[];
   isLoading?: boolean;
   externalLocation?: LocationSuggestion// New prop for external location
-  onFocus?: () => void; // New prop for focus event
+  onFocus?: () => void;
+  isActive?: boolean;
 }
