@@ -72,7 +72,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
 
 
   const handleSelect = (suggestion: LocationSuggestion) => {
-    const fullLocation = `${suggestion.name}, ${suggestion.subtitle?.name}, ${suggestion.subtitle?.wikidata_id}`;
+    const fullLocation = `${suggestion.name ?? ""}, ${suggestion.subtitle?.name ?? ""}, ${suggestion.subtitle?.wikidata_id ?? ""}`;
     onChange(fullLocation, suggestion);
     setQuery(fullLocation);
     setQuerCoord(suggestion.coordinates || null);
@@ -101,8 +101,8 @@ const LocationInput: React.FC<LocationInputProps> = ({
     // Only update if this input is active and there's an external location
     if (isActive && externalLocation) {
       const { name, subtitle } = externalLocation;
-      onChange(`${name}, ${subtitle?.name}, ${subtitle?.wikidata_id}`, externalLocation);
-      setQuery(`${name}, ${subtitle?.name}, ${subtitle?.wikidata_id}`);
+      onChange(`${name ?? ""}, ${subtitle?.name ?? ""}, ${subtitle?.wikidata_id ?? ""}`, externalLocation);
+      setQuery(`${name ?? ""}, ${subtitle?.name ?? ""}, ${subtitle?.wikidata_id ?? ""}`);
     }
   }, [externalLocation, isActive]);
 

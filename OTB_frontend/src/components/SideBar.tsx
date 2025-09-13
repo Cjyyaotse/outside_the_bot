@@ -41,6 +41,16 @@ const SideBar = ({ onInputSelectLocation, mapSelect, radius, onRadiusChange }: S
   const [loading, setLoading] = useState(false);
 
   const [activeInputIndex, setActiveInputIndex] = useState<number | null>(null);
+  // const []
+
+  // consolidating data from all fields on sidebar
+  // to pass to analysis or comparison modals
+  const getConsolidatedData = () => {
+    return {
+      locations: locations.map(loc => loc.selectedLocation?.coordinates).filter(Boolean),
+      radius,
+    };
+  };  
 
   // Add this function to handle input focus
   const handleInputFocus = (index: number) => {
