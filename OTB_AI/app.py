@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 from fastapi import FastAPI, Query
+from fastapi.middleware.cors import CORSMiddleware
 from src.main import (
     hybrid_search,
     build_prompt,
@@ -22,6 +23,15 @@ qdrant_client = QdrantClient(url=QDRANT_URL, api_key=API_KEY)
 
 # FastAPI app
 app = FastAPI(title="Tweet Classification API")
+
+# CORS middleware to allow requests from the frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # Your frontend URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def extract_documents(results):
     if isinstance(results, dict):

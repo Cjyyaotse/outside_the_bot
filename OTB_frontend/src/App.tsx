@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
 import XLogo from "./assets/icons/XLogo.svg"
 import GradientBox from './components/GradientBox'
@@ -13,6 +13,30 @@ function App() {
 
   const [mapSelect, setMapSelect] = useState<LocationSuggestion>();
   const [radius, setRadius] = useState<string>("25km"); // Default radius
+  const [staticMetrics, setStaticMetrics] = useState<any>(null);
+
+
+
+
+  useEffect(() => {
+    const getStaticMetrics = async () => {
+      const response = await fetch("http://127.0.0.1:8000/get_static_metrics", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+      if (!response.ok) {
+        console.error("Failed to fetch static metrics");
+        return;
+      }
+      const data = await response.json()
+      console.log("static metrics:", data)
+
+      return data
+    }
+    getStaticMetrics().then(data => setStaticMetrics(data))
+  }, [])
 
 
   return (

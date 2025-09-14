@@ -51,7 +51,7 @@ const SideBar = ({ onInputSelectLocation, mapSelect, radius, onRadiusChange }: S
     return {
       locations: locations.map(loc => loc.selectedLocation?.coordinates).filter(Boolean),
       radius,
-      topics: typing.split(',').map(t => t.trim()).filter(Boolean)
+      topics: typing
     };
   };
 
