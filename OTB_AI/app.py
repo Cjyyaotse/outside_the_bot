@@ -34,12 +34,11 @@ load_dotenv()
 class LocationItem(BaseModel):
     lat: float = Field(..., description="Latitude of the location")
     lon: float = Field(..., description="Longitude of the location")
-    radius_km: Optional[float] = Field(None, description="Search radius in kilometers for this location")
-    topic: Optional[str] = Field(None, description="Optional semantic text query for this location")
-
 
 class LocationsRequest(BaseModel):
     locations: List[LocationItem] = Field(..., description="Array of two location objects (lat, lon, radius_km, topic)")
+    radius_km: Optional[float] = Field(None, description="Search radius in kilometers for this location")
+    topic: Optional[str] = Field(None, description="Optional semantic text query for this location")
 
 # Qdrant service configuration
 QDRANT_URL = os.getenv("QDRANT_URL")
@@ -186,11 +185,12 @@ def search_tweets_batch(payload: LocationsRequest = Body(...)):
 
     Request body example:
     {
-      "collection_name": "tweets_collection",
       "locations": [
-        {"lat": 40.7128, "lon": -74.0060, "radius_km": 5, "topic": "music"},
-        {"lat": 34.0522, "lon": -118.2437, "radius_km": 10, "topic": "food"}
-      ]
+        {"lat": 40.7128, "lon": -74.0060},
+        {"lat": 34.0522, "lon": -118.2437}
+      ],
+      "radius_km": 10,
+      "topic": "food"
     }
 
     Returns:
@@ -204,15 +204,16 @@ def search_tweets_batch(payload: LocationsRequest = Body(...)):
 
     combined_results = []
     collection_name = "tweets_collection"
+
     for idx, loc in enumerate(payload.locations):
         # Step 1: Perform hybrid semantic + location search for this location
         results = hybrid_search(
             client=qdrant_client,
             query_lat=loc.lat,
             query_lon=loc.lon,
-            collection_name= collection_name,
-            text_query=loc.topic,
-            radius_km=loc.radius_km
+            collection_name=collection_name,
+            text_query=payload.topic,
+            radius_km=payload.radius_km
         )
 
         # Extract tweet texts from search results
@@ -231,8 +232,8 @@ def search_tweets_batch(payload: LocationsRequest = Body(...)):
             "location_index": idx,
             "lat": loc.lat,
             "lon": loc.lon,
-            "radius_km": loc.radius_km,
-            "topic": loc.topic,
+            "radius_km": payload.radius_km,
+            "topic": payload.topic,
             "tweets": tweets,
             "summary": result
         })
