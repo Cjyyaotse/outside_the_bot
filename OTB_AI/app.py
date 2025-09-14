@@ -10,8 +10,10 @@ It provides endpoints for:
 
 import os
 from dotenv import load_dotenv
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, Body, HTTPException
 from fastapi.responses import JSONResponse
+from typing import List, Optional
+from pydantic import BaseModel, Field
 from services.main import (
     hybrid_search,
     build_prompt,
@@ -27,6 +29,17 @@ from services.metrics import (
 
 # Load environment variables from a .env file (if present)
 load_dotenv()
+
+
+class LocationItem(BaseModel):
+    lat: float = Field(..., description="Latitude of the location")
+    lon: float = Field(..., description="Longitude of the location")
+    radius_km: Optional[float] = Field(None, description="Search radius in kilometers for this location")
+    topic: Optional[str] = Field(None, description="Optional semantic text query for this location")
+
+
+class LocationsRequest(BaseModel):
+    locations: List[LocationItem] = Field(..., description="Array of two location objects (lat, lon, radius_km, topic)")
 
 # Qdrant service configuration
 QDRANT_URL = os.getenv("QDRANT_URL")
@@ -120,7 +133,6 @@ def static_metrics():
 def search_tweets(
     query_lat: float = Query(..., description="Latitude of the location"),
     query_lon: float = Query(..., description="Longitude of the location"),
-    collection_name: str = Query("tweets_collection", description="Qdrant collection name"),
     topic: str | None = Query(None, description="Enter a topic of choice"),
     radius_km: float | None = Query(None, description="Radius of choice")
 ):
@@ -145,7 +157,7 @@ def search_tweets(
         client=qdrant_client,
         query_lat=query_lat,
         query_lon=query_lon,
-        collection_name=collection_name,
+        collection_name="tweets_collection",
         text_query=topic,
         radius_km=radius_km
     )
@@ -153,14 +165,11 @@ def search_tweets(
     # Extract tweet texts from search results
     tweets = extract_documents(results)
 
-    # Step 2: Prepare context text (can be raw results or pre-processed)
-    context_text = results
-
     # Step 3: Build LLM prompt from context
-    prompt = build_prompt(context_text)
+    prompt = build_prompt(results)
 
     # Step 4: Query LLM for structured summary
-    result = get_llm_response(prompt, context_text)
+    result = get_llm_response(prompt, results)
 
     return JSONResponse(content={
         "tweets": tweets,
@@ -168,16 +177,64 @@ def search_tweets(
     })
 
 
-@app.get("/get_tweets(trending)", tags=["Trending tweets"])
-def get_tweets(topic: str):
+@app.post("/get_tweets_inspo_batch", tags=["Tweet Search"])
+def search_tweets_batch(payload: LocationsRequest = Body(...)):
     """
-    Placeholder endpoint for fetching trending tweets on a specific topic.
+    Perform hybrid semantic + location searches for *two* locations and return
+    tweets and an LLM-generated structured summary for each location in one
+    JSON response.
 
-    Args:
-        topic (str): The topic of interest.
+    Request body example:
+    {
+      "collection_name": "tweets_collection",
+      "locations": [
+        {"lat": 40.7128, "lon": -74.0060, "radius_km": 5, "topic": "music"},
+        {"lat": 34.0522, "lon": -118.2437, "radius_km": 10, "topic": "food"}
+      ]
+    }
 
     Returns:
-        dict: Empty dictionary (to be implemented later).
+        JSONResponse: { "results": [ {"lat","lon","radius_km","topic","tweets","summary"}, {...} ] }
     """
-    tweets = {}
-    return tweets
+
+    # Validate exactly two locations (per user's request). If you want to support
+    # N locations, remove or relax this check.
+    if len(payload.locations) != 2:
+        raise HTTPException(status_code=400, detail="Please provide exactly two locations in the `locations` array.")
+
+    combined_results = []
+    collection_name = "tweets_collection"
+    for idx, loc in enumerate(payload.locations):
+        # Step 1: Perform hybrid semantic + location search for this location
+        results = hybrid_search(
+            client=qdrant_client,
+            query_lat=loc.lat,
+            query_lon=loc.lon,
+            collection_name= collection_name,
+            text_query=loc.topic,
+            radius_km=loc.radius_km
+        )
+
+        # Extract tweet texts from search results
+        tweets = extract_documents(results)
+
+        # Step 2: Prepare context text (can be raw results or pre-processed)
+        context_text = results
+
+        # Step 3: Build LLM prompt from context
+        prompt = build_prompt(context_text)
+
+        # Step 4: Query LLM for structured summary
+        result = get_llm_response(prompt, context_text)
+
+        combined_results.append({
+            "location_index": idx,
+            "lat": loc.lat,
+            "lon": loc.lon,
+            "radius_km": loc.radius_km,
+            "topic": loc.topic,
+            "tweets": tweets,
+            "summary": result
+        })
+
+    return JSONResponse(content={"results": combined_results})
