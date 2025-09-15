@@ -40,6 +40,8 @@ const MapCanvas: React.FC<MapCanvasProps> = ({ location, onMapSelect, zoomLevel 
       setIsLoading(false); // hide skeleton when map is ready
     });
 
+    map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "bottom-right")
+
     map.on('style.load', () => {
       const layers = map.getStyle().layers;
       const labelLayerId = layers?.find(
