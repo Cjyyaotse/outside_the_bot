@@ -43,8 +43,6 @@ function App() {
 
   }, [])
 
-  console.log("available Locations:::", countryStatePairs)
-
 
 
   return (
@@ -66,11 +64,7 @@ function App() {
       </section>
 
       <div className='flex-1 p-4 max-h-[100vh] relative'>
-        {/* a button that when you click a popup shows the countries available. the countries will have dropdowns that will show their states available */}
-        {/* <section>
-          <p>View Available Regions</p>
-          <div></div>
-        </section> */}
+    
         <section className='absolute top-10 left-5 z-10 '>
 
           <div className='relative'>

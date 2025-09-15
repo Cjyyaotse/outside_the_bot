@@ -57,7 +57,7 @@ const SideBar = ({ onInputSelectLocation, mapSelect, radius, onRadiusChange }: S
   const [suggestionsList, setSuggestionsList] = useState<LocationSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const [activeInputIndex, setActiveInputIndex] = useState<number | null>(null);
+  const [activeInputIndex, setActiveInputIndex] = useState<number>(0);
 
   const [analysisData, setAnalysisData] = useState<any>()
   const [compareRegionsData, setCompareRegionsData] = useState<CompareResultsType[]>([])
@@ -69,6 +69,7 @@ const SideBar = ({ onInputSelectLocation, mapSelect, radius, onRadiusChange }: S
 
   // Add this function to handle input focus
   const handleInputFocus = (index: number) => {
+    console.log("index:::", index)
     setActiveInputIndex(index);
   };
 

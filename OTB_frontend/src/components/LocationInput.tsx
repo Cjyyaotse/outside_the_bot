@@ -60,7 +60,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
   isLoading = false,
   externalLocation,
   onFocus,
-  isActive = false
+  isActive 
 }) => {
 
   const [focus, setFocus] = useState(false);
