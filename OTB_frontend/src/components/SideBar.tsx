@@ -11,8 +11,10 @@ import EchoGridModal from "../components/EchoGridModal"
 import TweetResults from "../components/TweetResults"
 import CompareTweets from "../components/CompareTweets"
 import { searchLocations } from "./MapBoxSearch"
-import type { LocationSuggestion } from "../utils/types"
+import type { LocationSuggestion, RawTweetData } from "../utils/types"
 import { useDebounce } from "../hooks/useDebounce"
+import { useAnalysis } from "../hooks/useAnalysis"
+import toast from "react-hot-toast"
 
 
 
@@ -30,8 +32,17 @@ interface SideBarProps {
   onRadiusChange: (radius: string) => void;
 }
 
+
+export interface TweetsResponseTypes {
+  summary: {
+    description: string;
+    "trending topics": string;
+  },
+  tweets: string[]
+}
+
 const SideBar = ({ onInputSelectLocation, mapSelect, radius, onRadiusChange }: SideBarProps) => {
-  const [typing, setTyping] = useState("")
+  const [topics, setTopics] = useState("")
   const [locations, setLocations] = useState<LocationData[]>([{ query: "" }]);
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -45,13 +56,20 @@ const SideBar = ({ onInputSelectLocation, mapSelect, radius, onRadiusChange }: S
 
   const [activeInputIndex, setActiveInputIndex] = useState<number | null>(null);
 
+  const [analysisData, setAnalysisData] = useState<any>()
+
+  const { fetchAnalysisTweets, isLoading } = useAnalysis(topics, Number(radius), locations[0].selectedLocation?.coordinates)
+
+
+  // console.log("fetchAnalysisTweets::", )
+
   // consolidating data from all fields on sidebar
   // to pass to analysis or comparison modals
   const getConsolidatedData = () => {
     return {
       locations: locations.map(loc => loc.selectedLocation?.coordinates).filter(Boolean),
       radius,
-      topics: typing
+      topics: topics
     };
   };
 
@@ -95,10 +113,9 @@ const SideBar = ({ onInputSelectLocation, mapSelect, radius, onRadiusChange }: S
     setLocations(updated);
   };
 
-  useEffect(() => {
-    const data = getConsolidatedData()
-    console.log("Consolidated Sidebar Data:", getConsolidatedData());
-  }, [locations, radius, typing]);
+  // useEffect(()=> {
+  //   console.log("consolidatedDAta:::", getConsolidatedData())
+  // })
 
   const closeModal = () => {
     setIsAnimating(true);
@@ -122,15 +139,27 @@ const SideBar = ({ onInputSelectLocation, mapSelect, radius, onRadiusChange }: S
     });
   };
 
-  const handleAnalyzeRegion = () => {
+  const handleAnalyzeRegion = async () => {
     // Pass selected locations to your analysis
-    const selectedLocations = locations
-      .filter(loc => loc.selectedLocation)
-      .map(loc => loc.selectedLocation!);
-
-    console.log('Analyzing regions:', selectedLocations);
-    openModal('search');
+    if (!locations[0].selectedLocation?.coordinates?.lat && !locations[0].selectedLocation?.coordinates?.lng) {
+      toast.error('Please select or reselect a location')
+      return
+    }
+    setIsVisible(true)
+    setActiveModal("search")
+    const response = await fetchAnalysisTweets()
+    setAnalysisData(response)
   };
+
+  const formatAnalysisData = (data: TweetsResponseTypes) => {
+    const rawTweets: RawTweetData[] = data?.tweets?.map((tweet, index) => ({
+      id: `tweet-${index}`, // Generate unique ID for each tweet
+      content: tweet,
+      timeAgo: "recent", // Since original data doesn't include time, using placeholder
+      verified: false // Default value since original data doesn't include verification status
+    }));
+    return { rawTweets, summary: data?.summary };
+  }
 
   const handleCompareRegions = () => {
     // Pass selected locations for comparison
@@ -152,7 +181,7 @@ const SideBar = ({ onInputSelectLocation, mapSelect, radius, onRadiusChange }: S
   };
 
   const handleChangeTopics = (topics: string[]) => {
-    setTyping(topics.join(', '));
+    setTopics(topics.join(', '));
   }
 
   // Check if compare button should be enabled
@@ -234,7 +263,7 @@ const SideBar = ({ onInputSelectLocation, mapSelect, radius, onRadiusChange }: S
             <img src={Search} alt='search' className='w-[20px] h-[20px]' />
             <p className='text-[#808080] font-semibold text-[16px]'>Topic Filter</p>
           </div>
-          <Input onChange={(e) => setTyping(e.target.value)} value={typing} className='h-[48px]' />
+          <Input onChange={(e) => setTopics(e.target.value)} value={topics} className='h-[48px]' />
         </div>
 
         {/* Popular tags */}
@@ -312,7 +341,7 @@ const SideBar = ({ onInputSelectLocation, mapSelect, radius, onRadiusChange }: S
                 </button>
                 <div className={`h-full transform transition-all duration-300 ease-in-out ${isVisible ? 'translate-x-0 opacity-100' : 'translate-x-4 opacity-0'
                   }`}>
-                  <TweetResults />
+                  <TweetResults location={locations[0].query.trim()} rawTweets={formatAnalysisData(analysisData)} isLoading={isLoading} />
                 </div>
               </div>
             )}

@@ -36,9 +36,10 @@ export interface CompareTweetsProps {
 
 
 export interface TweetResultsProps {
-  rawTweets?: RawTweetData[];
+  rawTweets?: { rawTweets: RawTweetData[], summary: { description: string; "trending topics": string } };
   location?: string;
   searchTerm?: string;
+  isLoading?: boolean;
 }
 
 

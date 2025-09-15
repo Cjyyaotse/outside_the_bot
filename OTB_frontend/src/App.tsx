@@ -6,6 +6,7 @@ import MapCanvas from './components/Map'
 import SideBar from './components/SideBar'
 import type { LocationSuggestion } from './utils/types'
 import { radiusToZoomMap } from './utils/constants'
+import { formatMetric } from './utils/helpers'
 
 
 function App() {
@@ -13,14 +14,15 @@ function App() {
 
   const [mapSelect, setMapSelect] = useState<LocationSuggestion>();
   const [radius, setRadius] = useState<string>("25km"); // Default radius
-  const [staticMetrics, setStaticMetrics] = useState<any>(null);
+  const [staticMetrics, setStaticMetrics] = useState<{ active_hotspots: number, total_conversations: number }>({ active_hotspots: 0, total_conversations: 0 });
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
 
 
 
   useEffect(() => {
     const getStaticMetrics = async () => {
-      const response = await fetch("http://127.0.0.1:8000/get_static_metrics", {
+      const response = await fetch(`${import.meta.env.VITE_BASE_URL}/get_static_metrics`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -35,8 +37,12 @@ function App() {
 
       return data
     }
-    getStaticMetrics().then(data => setStaticMetrics(data))
+    setIsLoading(true)
+    getStaticMetrics().then(data => setStaticMetrics(data)).then(() => setIsLoading(false))
+
   }, [])
+
+
 
 
   return (
@@ -48,8 +54,8 @@ function App() {
         </header>
 
         <section className='flex flex-row gap-4 mb-[20px]'>
-          <GradientBox value='200' title='Active Hotspots' />
-          <GradientBox value='2.47M' title='Conversations' />
+          <GradientBox value={formatMetric(staticMetrics.active_hotspots)} title='Active Hotspots' isLoading={isLoading} />
+          <GradientBox value={formatMetric(staticMetrics.total_conversations)} title='Conversations' isLoading={isLoading} />
         </section>
 
         <SideBar onInputSelectLocation={(lng, lat, place) =>
