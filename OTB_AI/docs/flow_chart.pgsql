@@ -1,24 +1,17 @@
                 ┌─────────────────────┐
                 │   Event Data Input  │
-                │  (images, audio,    │
-                │  slides, comments,  │
-                │  geolocation+time)  │
+                │ (tweets,geolocation)│
                 └─────────┬───────────┘
                           │
                           ▼
                 ┌─────────────────────┐
-                │   Preprocessing     │
-                │  - Frame extraction │
-                │  - Audio to chunks  │
-                │  - OCR on slides    │
+                │   Preprocessing     │    │
                 │  - Text cleaning    │
                 └─────────┬───────────┘
                           │
                           ▼
                 ┌─────────────────────┐
-                │   Embedding Models  │
-                │  - Image embeddings │
-                │  - Audio embeddings │
+                │   Embedding Models  │ │
                 │  - Text embeddings  │
                 └─────────┬───────────┘
                           │
@@ -27,8 +20,8 @@
                 │   Qdrant Vector Store  │
                 │  - Store embeddings    │
                 │  - Payload:            │
-                │    {geo, time, type,   │
-                │     metadata, decay}   │
+                │    {geo, tweets,       │
+                │     metadata}          │
                 └─────────┬──────────────┘
                           │
           ┌───────────────┼──────────────────┐
@@ -44,6 +37,5 @@
  ┌────────────────────────────┐
  │   User Experience Layer    │
  │ - Click pin = fetch media  │
- │ - Show clusters & routes   │
- │ - Apply temporal decay     │
+ │ - Show tweets              │
  └────────────────────────────┘
