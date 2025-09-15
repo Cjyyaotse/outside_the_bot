@@ -3,11 +3,11 @@ import FilterIcon from "../assets/icons/FilterIcon.svg";
 import { ChevronDown } from "lucide-react";
 
 const options = [
-  { value: "5km", label: "5km - Neighborhood" },
-  { value: "10km", label: "10km - Local Area" },
-  { value: "25km", label: "25km - City Wide" },
-  { value: "50km", label: "50km - Metropolitan" },
-  { value: "100km", label: "100km - Regional" },
+  { value: 5, label: "5km - Neighborhood" },
+  { value: 10, label: "10km - Local Area" },
+  { value: 25, label: "25km - City Wide" },
+  { value: 50, label: "50km - Metropolitan" },
+  { value: 100, label: "100km - Regional" },
 ];
 
 interface SelectProps {
@@ -24,7 +24,7 @@ const Select: React.FC<SelectProps> = ({ value, onChange }) => {
   // Set initial value from props if provided
   useEffect(() => {
     if (value) {
-      const option = options.find(opt => opt.value === value) || options[2];
+      const option = options.find(opt => opt.value.toString() === value) || options[2];
       setSelected(option);
     }
   }, [value]);
@@ -39,10 +39,10 @@ const Select: React.FC<SelectProps> = ({ value, onChange }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSelect = (option: { value: string; label: string }) => {
-    setSelected(option);
+  const handleSelect = (option: { value: number; label: string }) => {
+    setSelected((option));
     setOpen(false);
-    onChange?.(option.value); // Notify parent of change
+    onChange?.(String(option.value)); // Notify parent of change
   };
 
   return (
@@ -55,7 +55,7 @@ const Select: React.FC<SelectProps> = ({ value, onChange }) => {
         </div>
 
         {/* Selected box */}
-        <div
+        <button
           className="flex items-center justify-between h-[48px] w-full border border-[#808080] rounded-full px-4 bg-transparent text-white cursor-pointer"
           onClick={() => setOpen(!open)}
         >
@@ -64,7 +64,7 @@ const Select: React.FC<SelectProps> = ({ value, onChange }) => {
             className={`transition-transform ${open ? "rotate-180" : ""}`}
             size={20}
           />
-        </div>
+        </button>
 
         {/* Dropdown */}
         {open && (

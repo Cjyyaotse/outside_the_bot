@@ -40,74 +40,11 @@ const formatTweetsForDisplay = (rawTweets: RawTweetData[]): UserPost[] => {
   });
 };
 
-const CompareTweets: React.FC<CompareTweetsProps> = ({ locationData }) => {
+const CompareTweets: React.FC<CompareTweetsProps> = ({ locationData, isLoading }) => {
   // Default mock data for development/fallback
-  const defaultLocationData: LocationData[] = [
-    {
-      name: 'London',
-      trendingTopics: [
-        { id: '1', label: 'crypto' },
-        { id: '2', label: 'sports' },
-        { id: '3', label: 'politics' },
-        { id: '4', label: 'food' }
-      ],
-      searchTerm: 'music',
-      rawTweets: [
-        {
-          id: 'london_1',
-          content: 'How will this work when you have spunks leaving their trash all over the the site.',
-          timeAgo: '1h',
-          verified: true
-        },
-        {
-          id: 'london_2',
-          content: 'Just discovered an amazing new music venue in London! The acoustics are incredible.',
-          timeAgo: '7h',
-          verified: true
-        },
-        {
-          id: 'london_3',
-          content: 'The underground music scene here is absolutely thriving right now.',
-          timeAgo: '12h',
-          verified: false
-        },
-        {
-          id: 'london_4',
-          content: 'Anyone know good spots for live jazz? Looking for recommendations.',
-          timeAgo: '17h',
-          verified: false
-        }
-      ]
-    },
-    {
-      name: 'Istanbul',
-      trendingTopics: [
-        { id: '1', label: 'food' },
-        { id: '2', label: 'houses' },
-        { id: '3', label: 'politics' },
-        { id: '4', label: 'culture' },
-        { id: '5', label: 'tourism' }
-      ],
-      searchTerm: 'music',
-      rawTweets: [
-        {
-          id: 'istanbul_1',
-          content: 'The traditional Turkish music scene is incredible here in Istanbul.',
-          timeAgo: '2h',
-          verified: true
-        },
-        {
-          id: 'istanbul_2',
-          content: 'Best city for fusion of eastern and western musical styles.',
-          timeAgo: '8h',
-          verified: false
-        }
-      ]
-    }
-  ];
 
   // Use provided data or fallback to mock data
-  const dataToUse = locationData || defaultLocationData;
+  const dataToUse = locationData;
 
   // Format tweets for each location
   const formattedLocationData = useMemo(() => {
@@ -117,8 +54,43 @@ const CompareTweets: React.FC<CompareTweetsProps> = ({ locationData }) => {
     }));
   }, [dataToUse]);
 
+  console.log("locationdata:::", locationData)
+
+  // show loading skeleton during isLoading
+  if (isLoading) {
+    return (
+      <div className="h-[100vh] backdrop-blur-md">
+        <div className="flex items-center justify-between p-4">
+          <div className="h-8 w-40 bg-gray-700 animate-pulse rounded"></div>
+          <div className="flex gap-3">
+            <div className="h-5 w-5 bg-gray-700 animate-pulse rounded"></div>
+            <div className="h-5 w-5 bg-gray-700 animate-pulse rounded"></div>
+          </div>
+        </div>
+        <div className="flex">
+          {[1, 2].map((_, index) => (
+            <React.Fragment key={index}>
+              <div className="flex-1 h-[100vh] overflow-hidden">
+                <div className="p-4">
+                  <div className="h-6 w-32 bg-gray-700 animate-pulse rounded mb-4"></div>
+                  <div className="h-24 bg-gray-700 animate-pulse rounded mb-6"></div>
+                  <div className="space-y-4">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="h-20 bg-gray-700 animate-pulse rounded"></div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              {index === 0 && <div className="w-px bg-slate-700"></div>}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   const renderLocationPanel = (data: LocationData & { formattedPosts: UserPost[] }) => (
-    <div className="flex-1 h-[100vh] overflow-auto custom-scrollbar text-white">
+    <div className="flex flex-col flex-1 h-[100vh] overflow-auto custom-scrollbar text-white">
       {/* Header */}
       <div className="flex items-center gap-2 p-4">
         <MapPin className="text-white" size={16} />
@@ -129,7 +101,9 @@ const CompareTweets: React.FC<CompareTweetsProps> = ({ locationData }) => {
       <div className="px-4 pb-[24px] border-b border-[#333639]">
         <div className='p-[20px] rounded-[20px] bg-transparent border-[1px] border-[#333639]'>
           <p className="text-sm text-gray-300 leading-relaxed">
-            Looking for "{data.searchTerm || 'music'}" in {data.name}? The search is a bit quiet right now, but conversations about this topic do happen here!
+            {
+              data.description
+            }
           </p>
         </div>
       </div>
@@ -148,52 +122,59 @@ const CompareTweets: React.FC<CompareTweetsProps> = ({ locationData }) => {
       </div>
 
       {/* User Posts */}
-      <div className="flex-1">
-        {data.formattedPosts.map((post) => (
-          <div key={post.id} className="p-4 border-b border-slate-700 hover:bg-slate-800/50 transition-colors cursor-pointer">
-            <div className="flex gap-3">
-              {/* Avatar */}
-              <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden p-2" style={{ backgroundColor: post.bgColor }}>
-                <img
-                  src={post.avatar}
-                  alt={post.username}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    // Fallback to initials if image fails to load
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                    target.nextElementSibling!.textContent = post.username.slice(0, 2).toUpperCase();
-                  }}
-                />
-                <span className="text-white text-sm font-medium hidden">
-                  {post.username.slice(0, 2).toUpperCase()}
-                </span>
-              </div>
+      <div className="flex-1 mb-[70px]">
+        {data.formattedPosts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center p-8 text-center">
+            <div className="text-gray-500 mb-2">No posts available</div>
+            <p className="text-sm text-gray-400">There are no posts to display for this location.</p>
+          </div>
+        ) : (
+          data.formattedPosts.map((post) => (
+            <div key={post.id} className="p-4 border-b border-slate-700 hover:bg-slate-800/50 transition-colors cursor-pointer">
+              <div className="flex gap-3">
+          {/* Avatar */}
+          <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden p-2" style={{ backgroundColor: post.bgColor }}>
+            <img
+              src={post.avatar}
+              alt={post.username}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                // Fallback to initials if image fails to load
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                target.nextElementSibling!.textContent = post.username.slice(0, 2).toUpperCase();
+              }}
+            />
+            <span className="text-white text-sm font-medium hidden">
+              {post.username.slice(0, 2).toUpperCase()}
+            </span>
+          </div>
 
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1 mb-1">
-                  <span className="font-medium text-sm truncate">{post.username}</span>
-                  {post.verified && (
-                    <img src={Verified} alt="Verified" />
-                  )}
-                  <span className="text-gray-500 text-sm">•</span>
-                  <span className="text-gray-500 text-sm">{post.timeAgo}</span>
-                </div>
-                <p className="text-sm text-gray-300 leading-relaxed">
-                  {post.content}
-                </p>
+          {/* Content */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1 mb-1">
+              <span className="font-medium text-sm truncate">{post.username}</span>
+              {post.verified && (
+                <img src={Verified} alt="Verified" />
+              )}
+              <span className="text-gray-500 text-sm">•</span>
+              <span className="text-gray-500 text-sm">{post.timeAgo}</span>
+            </div>
+            <p className="text-sm text-gray-300 leading-relaxed">
+              {post.content}
+            </p>
+          </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
 
         {/* Load More */}
-        <div className="p-4 text-center">
+        {/* <div className="p-4 text-center">
           <button className="text-blue-400 text-sm hover:text-blue-300 transition-colors">
             load more
           </button>
-        </div>
+        </div> */}
       </div>
     </div>
   );

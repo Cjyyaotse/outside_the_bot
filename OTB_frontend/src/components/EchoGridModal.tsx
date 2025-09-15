@@ -1,22 +1,13 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 
 interface GridTypes {
-  onClick?: () => void
+  onClick?: () => void;
+  onChangeTopics?: (topics: string[]) => void;
 }
 
-type CategoryTags = {
-  culture: string[];
-  sports: string[];
-  fashion: string[];
-}
-
-const EchoGridModal: React.FC<GridTypes> = ({ onClick }) => {
-  const [selectedTags, setSelectedTags] = useState<CategoryTags>({
-    culture: ['crypto'],
-    sports: [],
-    fashion: []
-  });
+const EchoGridModal: React.FC<GridTypes> = ({ onClick, onChangeTopics }) => {
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   const categories = [
     {
@@ -39,14 +30,19 @@ const EchoGridModal: React.FC<GridTypes> = ({ onClick }) => {
     }
   ];
 
-  const toggleTag = (categoryId: keyof CategoryTags, tag: string) => {
-    setSelectedTags(prev => ({
-      ...prev,
-      [categoryId]: prev[categoryId].includes(tag)
-        ? prev[categoryId].filter(t => t !== tag)
-        : [...prev[categoryId], tag]
-    }));
+  const toggleTag = (tag: string) => {
+    setSelectedTags(prev => {
+      if (prev.includes(tag)) {
+        return prev.filter(t => t !== tag);
+      } else {
+        return [...prev, tag];
+      }
+    });
   };
+
+  useEffect(() => {
+    onChangeTopics?.(selectedTags);
+  }, [selectedTags]);
 
   return (
     <div className="flex items-center justify-center fixed inset-0 bg-black/20 z-50" onClick={onClick}>
@@ -70,7 +66,7 @@ const EchoGridModal: React.FC<GridTypes> = ({ onClick }) => {
                 {/* Tags Grid */}
                 <div className="flex flex-wrap gap-2">
                   {category.tags.map((tag, index) => {
-                    const isSelected = selectedTags[category.id as keyof CategoryTags].includes(tag);
+                    const isSelected = selectedTags.includes(tag);
                     const uniqueKey = `${category.id}-${tag}-${index}`;
 
                     return (
@@ -78,7 +74,7 @@ const EchoGridModal: React.FC<GridTypes> = ({ onClick }) => {
                         key={uniqueKey}
                         onClick={(e) => {
                           e.stopPropagation();
-                          toggleTag(category.id as keyof CategoryTags, tag);
+                          toggleTag(tag);
                         }}
                         className={`px-3 py-1 rounded-full text-sm font-medium transition-all bg-transparent backdrop-blur-sm duration-200 cursor-pointer ${isSelected
                           ? "text-white border-2 border-[#1DA1F2] text-2xl font-light shadow-[0_0_25px_#1DA1F2] "
@@ -98,9 +94,9 @@ const EchoGridModal: React.FC<GridTypes> = ({ onClick }) => {
 
         {/* Footer */}
         <div className="p-6 border-t border-slate-700 flex justify-end gap-3">
-          <button className="px-4 bg-[#1DA1F2] hover:bg-[#0c80c9] text-white rounded-full font-semibold transition-colors duration-300 ease-in w-fit text-[12px]" onClick={onClick}>
+          {/* <button className="px-4 bg-[#1DA1F2] hover:bg-[#0c80c9] text-white rounded-full font-semibold transition-colors duration-300 ease-in w-fit text-[12px]" onClick={onClick}>
             Reset
-          </button>
+          </button> */}
           <button className="px-4 bg-white rounded-full py-2 text-[#000000] transition-colors font-semibold w-fit text-[12px]" onClick={onClick}>
             Save
           </button>

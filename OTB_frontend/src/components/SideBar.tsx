@@ -12,6 +12,12 @@ import TweetResults from "../components/TweetResults"
 import CompareTweets from "../components/CompareTweets"
 import { searchLocations } from "./MapBoxSearch"
 import type { LocationSuggestion } from "../utils/types"
+import { useDebounce } from "../hooks/useDebounce"
+import { useAnalysis } from "../hooks/useAnalysis"
+import toast from "react-hot-toast"
+import { formatAnalysisData, formatMultipleCompareResults } from "../utils/helpers"
+import { useCompare } from "../hooks/useCompare"
+import type { CompareResultsType } from "../services/compare"
 
 
 
@@ -29,18 +35,37 @@ interface SideBarProps {
   onRadiusChange: (radius: string) => void;
 }
 
+
+export interface TweetsResponseTypes {
+  summary: {
+    description: string;
+    "trending topics": string;
+  },
+  tweets: string[]
+}
+
 const SideBar = ({ onInputSelectLocation, mapSelect, radius, onRadiusChange }: SideBarProps) => {
-  const [typing, setTyping] = useState("")
+  const [topics, setTopics] = useState("")
   const [locations, setLocations] = useState<LocationData[]>([{ query: "" }]);
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
   const [query, setQuery] = useState("");
+  const debouncedQuery = useDebounce(query, 300);
+
   const [suggestionsList, setSuggestionsList] = useState<LocationSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
 
   const [activeInputIndex, setActiveInputIndex] = useState<number | null>(null);
+
+  const [analysisData, setAnalysisData] = useState<any>()
+  const [compareRegionsData, setCompareRegionsData] = useState<CompareResultsType[]>([])
+
+  const { fetchAnalysisTweets, isLoading } = useAnalysis(topics, Number(radius), locations[0].selectedLocation?.coordinates)
+
+  const { compareRegions, isCompareLoading } = useCompare()
+
 
   // Add this function to handle input focus
   const handleInputFocus = (index: number) => {
@@ -48,7 +73,7 @@ const SideBar = ({ onInputSelectLocation, mapSelect, radius, onRadiusChange }: S
   };
 
   useEffect(() => {
-    if (!query) {
+    if (!debouncedQuery.trim()) {
       setSuggestionsList([])
       return;
     }
@@ -56,7 +81,7 @@ const SideBar = ({ onInputSelectLocation, mapSelect, radius, onRadiusChange }: S
     let active = true;
     setLoading(true);
 
-    searchLocations(query).then((results) => {
+    searchLocations(debouncedQuery).then((results) => {
       if (active) {
         setSuggestionsList(results);
         setLoading(false)
@@ -67,7 +92,7 @@ const SideBar = ({ onInputSelectLocation, mapSelect, radius, onRadiusChange }: S
       active = false;
     }
 
-  }, [query])
+  }, [debouncedQuery])
 
 
   const addLocation = () => {
@@ -105,34 +130,43 @@ const SideBar = ({ onInputSelectLocation, mapSelect, radius, onRadiusChange }: S
     });
   };
 
-  const handleAnalyzeRegion = () => {
+  const handleAnalyzeRegion = async () => {
     // Pass selected locations to your analysis
-    const selectedLocations = locations
-      .filter(loc => loc.selectedLocation)
-      .map(loc => loc.selectedLocation!);
-
-    console.log('Analyzing regions:', selectedLocations);
-    openModal('search');
+    if (!locations[0].selectedLocation?.coordinates?.lat && !locations[0].selectedLocation?.coordinates?.lng) {
+      toast.error('Please select or reselect a location')
+      return
+    }
+    setIsVisible(true)
+    setActiveModal("search")
+    const response = await fetchAnalysisTweets()
+    setAnalysisData(response)
   };
 
-  const handleCompareRegions = () => {
+
+
+  const handleCompareRegions = async () => {
     // Pass selected locations for comparison
     const selectedLocations = locations
       .filter(loc => loc.selectedLocation)
-      .map(loc => loc.selectedLocation!);
+      .map(loc => ({ lat: loc.selectedLocation?.coordinates?.lat!, lon: loc.selectedLocation?.coordinates?.lng! }));
 
     if (selectedLocations.length < 2) {
-      alert('Please select at least 2 locations to compare');
+      toast.error('Please select at least 2 locations to compare');
       return;
     }
-
-    console.log('Comparing regions:', selectedLocations);
     openModal('compare');
+    const data = await compareRegions({ locations: selectedLocations, radius: Number(radius), topic: topics })
+
+    setCompareRegionsData(data)
   };
 
   const handleShowMore = () => {
     openModal('echogrid');
   };
+
+  const handleChangeTopics = (topics: string[]) => {
+    setTopics(topics.join(', '));
+  }
 
   // Check if compare button should be enabled
   const canCompareRegions = locations.filter(loc => loc.selectedLocation).length >= 2;
@@ -213,7 +247,7 @@ const SideBar = ({ onInputSelectLocation, mapSelect, radius, onRadiusChange }: S
             <img src={Search} alt='search' className='w-[20px] h-[20px]' />
             <p className='text-[#808080] font-semibold text-[16px]'>Topic Filter</p>
           </div>
-          <Input onChange={(e) => setTyping(e.target.value)} isText={typing} className='h-[48px]' placeholder={<p className='text-[#808080]'>Enter keywords</p>} borderColor="border-[#808080]" />
+          <Input onChange={(e) => setTopics(e.target.value)} value={topics} className='h-[48px]' />
         </div>
 
         {/* Popular tags */}
@@ -267,7 +301,7 @@ const SideBar = ({ onInputSelectLocation, mapSelect, radius, onRadiusChange }: S
         >
           {/* EchoGrid Modal */}
           {activeModal === 'echogrid' && (
-            <EchoGridModal onClick={closeModal} />
+            <EchoGridModal onClick={closeModal} onChangeTopics={handleChangeTopics} />
           )}
 
           {/* Right-side Modal Container */}
@@ -291,7 +325,7 @@ const SideBar = ({ onInputSelectLocation, mapSelect, radius, onRadiusChange }: S
                 </button>
                 <div className={`h-full transform transition-all duration-300 ease-in-out ${isVisible ? 'translate-x-0 opacity-100' : 'translate-x-4 opacity-0'
                   }`}>
-                  <TweetResults />
+                  <TweetResults location={locations[0].query.trim()} rawTweets={formatAnalysisData(analysisData)} isLoading={isLoading} />
                 </div>
               </div>
             )}
@@ -301,7 +335,7 @@ const SideBar = ({ onInputSelectLocation, mapSelect, radius, onRadiusChange }: S
               <div className="h-full w-[800px] relative shadow-2xl">
                 <div className={`h-full transform transition-all duration-300 ease-in-out ${isVisible ? 'translate-x-0' : 'translate-x-4 opacity-0'
                   }`}>
-                  <CompareTweets />
+                  <CompareTweets locationData={formatMultipleCompareResults(compareRegionsData)} isLoading={isCompareLoading} />
                 </div>
               </div>
             )}

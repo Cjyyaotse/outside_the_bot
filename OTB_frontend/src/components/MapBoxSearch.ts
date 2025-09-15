@@ -19,9 +19,8 @@ export const searchLocations = async (query: string) => {
       try {
         const detail = await searchClient.retrieve(s, {
           sessionToken: "my-session",
-        })
+        });
 
-        console.log("Detail for suggestion:", s, detail);
         return {
           id: s.mapbox_id,
           name: s.name,

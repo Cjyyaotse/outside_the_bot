@@ -11,6 +11,7 @@ It provides endpoints for:
 import os
 from dotenv import load_dotenv
 from fastapi import FastAPI, Query, Body, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from typing import List, Optional
 from pydantic import BaseModel, Field
@@ -53,6 +54,15 @@ qdrant_client = QdrantClient(url=QDRANT_URL, api_key=API_KEY)
 
 # Create FastAPI application instance
 app = FastAPI(title="Tweet Classification API")
+
+# CORS middleware to allow requests from the frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # Your frontend URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 def extract_documents(results):
