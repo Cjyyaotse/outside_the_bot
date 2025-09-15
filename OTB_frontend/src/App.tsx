@@ -6,7 +6,8 @@ import MapCanvas from './components/Map'
 import SideBar from './components/SideBar'
 import type { LocationSuggestion } from './utils/types'
 import { radiusToZoomMap } from './utils/constants'
-import { formatMetric } from './utils/helpers'
+import { countryStatePairs, formatMetric } from './utils/helpers'
+import { AvailableLocationsPopup } from './components/AvailableRegionsSection'
 
 
 function App() {
@@ -16,7 +17,7 @@ function App() {
   const [radius, setRadius] = useState<string>("25"); // Default radius
   const [staticMetrics, setStaticMetrics] = useState<{ active_hotspots: number, total_conversations: number }>({ active_hotspots: 0, total_conversations: 0 });
   const [isLoading, setIsLoading] = useState<boolean>(false);
-
+  const [view, setView] = useState(false)
 
 
 
@@ -42,6 +43,7 @@ function App() {
 
   }, [])
 
+  console.log("available Locations:::", countryStatePairs)
 
 
 
@@ -63,7 +65,22 @@ function App() {
         } mapSelect={mapSelect} radius={radius} onRadiusChange={setRadius} />
       </section>
 
-      <div className='flex-1 p-4 max-h-[100vh]'>
+      <div className='flex-1 p-4 max-h-[100vh] relative'>
+        {/* a button that when you click a popup shows the countries available. the countries will have dropdowns that will show their states available */}
+        {/* <section>
+          <p>View Available Regions</p>
+          <div></div>
+        </section> */}
+        <section className='absolute top-10 left-5 z-10 '>
+
+          <div className='relative'>
+            <button className='text-white bg-black p-3 rounded-xl hover:bg-black/50 duration-300 transition-all ease-in cursor-pointer font-semibold shadow-sm ' onClick={() => setView(true)}>
+              View Available Tweet Regions
+            </button>
+
+            <AvailableLocationsPopup countryStates={countryStatePairs} isOpen={view} onClose={() => setView(false)} />
+          </div>
+        </section>
         <MapCanvas location={selected} onMapSelect={setMapSelect} zoomLevel={radiusToZoomMap[radius]} />
       </div>
     </main>

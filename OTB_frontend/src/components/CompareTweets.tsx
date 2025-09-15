@@ -123,44 +123,51 @@ const CompareTweets: React.FC<CompareTweetsProps> = ({ locationData, isLoading }
 
       {/* User Posts */}
       <div className="flex-1 mb-[70px]">
-        {data.formattedPosts.map((post) => (
-          <div key={post.id} className="p-4 border-b border-slate-700 hover:bg-slate-800/50 transition-colors cursor-pointer">
-            <div className="flex gap-3">
-              {/* Avatar */}
-              <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden p-2" style={{ backgroundColor: post.bgColor }}>
-                <img
-                  src={post.avatar}
-                  alt={post.username}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    // Fallback to initials if image fails to load
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                    target.nextElementSibling!.textContent = post.username.slice(0, 2).toUpperCase();
-                  }}
-                />
-                <span className="text-white text-sm font-medium hidden">
-                  {post.username.slice(0, 2).toUpperCase()}
-                </span>
-              </div>
+        {data.formattedPosts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center p-8 text-center">
+            <div className="text-gray-500 mb-2">No posts available</div>
+            <p className="text-sm text-gray-400">There are no posts to display for this location.</p>
+          </div>
+        ) : (
+          data.formattedPosts.map((post) => (
+            <div key={post.id} className="p-4 border-b border-slate-700 hover:bg-slate-800/50 transition-colors cursor-pointer">
+              <div className="flex gap-3">
+          {/* Avatar */}
+          <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden p-2" style={{ backgroundColor: post.bgColor }}>
+            <img
+              src={post.avatar}
+              alt={post.username}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                // Fallback to initials if image fails to load
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                target.nextElementSibling!.textContent = post.username.slice(0, 2).toUpperCase();
+              }}
+            />
+            <span className="text-white text-sm font-medium hidden">
+              {post.username.slice(0, 2).toUpperCase()}
+            </span>
+          </div>
 
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1 mb-1">
-                  <span className="font-medium text-sm truncate">{post.username}</span>
-                  {post.verified && (
-                    <img src={Verified} alt="Verified" />
-                  )}
-                  <span className="text-gray-500 text-sm">•</span>
-                  <span className="text-gray-500 text-sm">{post.timeAgo}</span>
-                </div>
-                <p className="text-sm text-gray-300 leading-relaxed">
-                  {post.content}
-                </p>
+          {/* Content */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1 mb-1">
+              <span className="font-medium text-sm truncate">{post.username}</span>
+              {post.verified && (
+                <img src={Verified} alt="Verified" />
+              )}
+              <span className="text-gray-500 text-sm">•</span>
+              <span className="text-gray-500 text-sm">{post.timeAgo}</span>
+            </div>
+            <p className="text-sm text-gray-300 leading-relaxed">
+              {post.content}
+            </p>
+          </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
 
         {/* Load More */}
         {/* <div className="p-4 text-center">

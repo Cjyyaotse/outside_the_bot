@@ -1,6 +1,7 @@
 import type { TweetsResponseTypes } from "../components/SideBar";
 import type { CompareResultsType } from "../services/compare";
 import type { LocationData, LocationType, RawTweetData, TrendingTopic } from "./types";
+import availableCountries from "./availableCountries.json"
 
 export async function reverseGeocode(lng: number, lat: number) {
   const token = import.meta.env.VITE_DEFAULT_PUBLIC_TOKEN;
@@ -104,3 +105,54 @@ export function formatMultipleCompareResults(
     formatCompareResults(result, searchTerm)
   );
 }
+
+
+interface AvailableLocationsTypes {
+  lat: number;
+  lon: number;
+  place_name: string;
+  display_name: string;
+  address: {
+    city?: string;
+    village?: string;
+    county?: string;
+    state?: string;
+    country: string;
+    country_code: string;
+    // Other possible fields
+    [key: string]: any;
+  };
+}
+
+export interface CountryStates {
+  country: string;
+  states: string[];
+}
+
+export function getCountryWithStates(locations: AvailableLocationsTypes[]): CountryStates[] {
+  const countryMap = new Map<string, Set<string>>();
+
+  locations.forEach(location => {
+    const country = location?.address?.country;
+    const state = location?.address?.state || location.address.county || 'Unknown Region';
+
+    if (!countryMap.has(country)) {
+      countryMap.set(country, new Set<string>());
+    }
+
+    countryMap.get(country)!.add(state);
+  });
+
+  // Convert Map to array of objects and sort
+  return Array.from(countryMap.entries())
+    .map(([country, statesSet]) => ({
+      country,
+      states: Array.from(statesSet).sort()
+    }))
+    .sort((a, b) => a.country?.localeCompare(b?.country));
+}
+
+
+// Usage
+export const countryStatePairs = getCountryWithStates(availableCountries as AvailableLocationsTypes[]);
+

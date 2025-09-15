@@ -94,9 +94,9 @@ const EchoGridModal: React.FC<GridTypes> = ({ onClick, onChangeTopics }) => {
 
         {/* Footer */}
         <div className="p-6 border-t border-slate-700 flex justify-end gap-3">
-          <button className="px-4 bg-[#1DA1F2] hover:bg-[#0c80c9] text-white rounded-full font-semibold transition-colors duration-300 ease-in w-fit text-[12px]" onClick={onClick}>
+          {/* <button className="px-4 bg-[#1DA1F2] hover:bg-[#0c80c9] text-white rounded-full font-semibold transition-colors duration-300 ease-in w-fit text-[12px]" onClick={onClick}>
             Reset
-          </button>
+          </button> */}
           <button className="px-4 bg-white rounded-full py-2 text-[#000000] transition-colors font-semibold w-fit text-[12px]" onClick={onClick}>
             Save
           </button>
