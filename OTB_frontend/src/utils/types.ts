@@ -28,10 +28,13 @@ export interface LocationData {
   trendingTopics: TrendingTopic[];
   rawTweets: RawTweetData[];
   searchTerm?: string;
+  radius:number;
+  description?:string
 }
 
 export interface CompareTweetsProps {
-  locationData?: LocationData[];
+  locationData: LocationData[];
+  isLoading?:boolean;
 }
 
 

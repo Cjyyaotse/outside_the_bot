@@ -13,9 +13,6 @@ export const getLocationTweets = async (
       throw new Error("location coordinates are empty")
     }
 
-    console.log("data::", radius, topics, locations)
-    // ["-73.63197015422367", "40.561890585516394"]
-
     // query_lat: "40.561890585516394",
     //   query_lon: "-73.63197015422367",
 
@@ -23,7 +20,7 @@ export const getLocationTweets = async (
     const params = new URLSearchParams({
       query_lat: locations.lat.toString(),
       query_lon: locations.lng.toString(),
-      radius_km: (300).toString(),
+      radius_km: (radius).toString(),
     })
 
     // Add optional parameters

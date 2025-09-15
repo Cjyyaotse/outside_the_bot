@@ -13,7 +13,7 @@ function App() {
   const [selected, setSelected] = useState<{ lng: number; lat: number; place: string }>();
 
   const [mapSelect, setMapSelect] = useState<LocationSuggestion>();
-  const [radius, setRadius] = useState<string>("25km"); // Default radius
+  const [radius, setRadius] = useState<string>("25"); // Default radius
   const [staticMetrics, setStaticMetrics] = useState<{ active_hotspots: number, total_conversations: number }>({ active_hotspots: 0, total_conversations: 0 });
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
