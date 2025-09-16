@@ -4,7 +4,7 @@ This repository contains the frontend application for the Outside The Bot projec
 
 ## Overview
 
-Outside The Bot is a web application that provides an interface for managing and interacting with chat bots. This frontend component is built to deliver a seamless user experience while interacting with the backend services.
+X chirpmap is a web application that provides an interface for managing and interacting with chat bots. This frontend component is built to deliver a seamless user experience while interacting with the backend services.
 
 ## Installation
 
