@@ -1,171 +1,199 @@
-Overview and Purpose
-
-Backend README (Tweet Classification and Analysis API):
-
-Purpose: Describes a FastAPI-based backend application focused on analyzing and classifying tweets stored in a Qdrant vector database. It emphasizes semantic and location-based searches, tweet summarization using large language models (LLMs), and providing analytics like total tweet counts and unique locations.
-Focus: Backend functionality, API endpoints, data processing, and integration with external services (Qdrant, Mistral, OpenAI).
-Intended Audience: Developers or data scientists interested in tweet analysis, API usage, or integrating with the backend.
-
-
-Frontend README (Outside The Bot - Frontend):
-
-Purpose: Outlines a web-based frontend application for the "Outside The Bot" project, designed to provide a user interface for interacting with chatbots and visualizing tweet data, likely powered by the backend API.
-Focus: User-facing features like map integration, search functionality, and tweet comparison across regions.
-Intended Audience: Frontend developers or users interested in the web interface and its interactive features.
-
-
-
-Comparison:
-
-The backend README is highly technical, focusing on the API’s architecture, data processing, and integration details, while the frontend README is more concise, emphasizing user-facing features and development setup.
-Both are part of the same project ("Outside The Bot"), suggesting the frontend consumes the backend API to display tweet-related data and analytics.
-
-Features
-
-Backend Features:
-
-Semantic search using text embeddings (BAAI/bge-small-en-v1.5).
-Location-based search by latitude/longitude with radius filtering.
-Hybrid search combining semantic and location-based queries.
-LLM-based summarization (Mistral, with OpenAI fallback) for structured JSON summaries.
-Static metrics (e.g., total tweets, unique locations).
-Batch processing for multiple locations.
-Robust error handling with fallbacks.
-
-
-Frontend Features:
-
-Map integration using Mapbox for visualizing tweet locations.
-Search and autocomplete functionality.
-Display of tweets from around the world.
-Comparison of tweets between regions.
-Summaries of tweets in specific regions.
-
-
-
-Comparison:
-
-The backend provides the core data processing and retrieval capabilities (e.g., semantic search, location-based queries, and summarization), which the frontend likely visualizes and makes accessible to users.
-Frontend features like "tweets around the world" and "comparing tweets between regions" directly align with backend capabilities like location-based and batch searches.
-The frontend’s map and autocomplete features enhance user interaction but rely on backend data (e.g., tweet locations and summaries).
-The backend’s focus on technical functionality (e.g., embeddings, LLMs) contrasts with the frontend’s emphasis on user experience (e.g., maps, search UI).
-
-Technical Details
-
-Backend Technical Stack:
-
-Language: Python (0.3% of the codebase, with Jupyter Notebook at 99.2%).
-Framework: FastAPI for RESTful API endpoints.
-Database: Qdrant vector database for storing tweet embeddings and metadata.
-Dependencies: fastapi, uvicorn, qdrant-client, fastembed, python-dotenv, pydantic, mistralai, langchain, numpy, geopy.
-External Services: Mistral LLM, OpenAI (fallback), Geopy for reverse geocoding.
-Setup: Requires environment variables (e.g., API keys for Mistral, Qdrant, OpenAI) and a running Qdrant server.
-API Endpoints: Detailed endpoints for status checks, semantic searches, static metrics, and hybrid/batch searches.
-
-
-Frontend Technical Stack:
-
-Language: TypeScript (0.5%), JavaScript (0.0%), CSS (0.0%).
-Framework: Likely a JavaScript framework (e.g., React, Vue) based on npm usage, though not explicitly stated.
-Dependencies: Managed via npm (specific packages not listed in the README).
-External Services: Mapbox for map integration.
-Setup: Involves cloning the repo, installing npm dependencies, and running a development server (npm run dev) or building for production (npm run build).
-
-
-
-Comparison:
-
-The backend uses Python and a robust stack for data processing and API services, while the frontend leverages TypeScript/JavaScript for a web-based UI, indicating a clear separation of concerns.
-The backend’s reliance on Qdrant and LLMs suggests heavy data processing, while the frontend’s use of Mapbox and autocomplete focuses on visualization and interactivity.
-The backend README provides detailed dependency and environment setup instructions, while the frontend README is less detailed, omitting specific framework or dependency information.
-
-Structure and Documentation
-
-Backend README:
-
-Structure: Comprehensive, with sections like Table of Contents, Features, Architecture, Prerequisites, Installation, Environment Variables, Usage, API Endpoints, Dependencies, Running Tests, Contributing, and License.
-Details: Includes example API requests/responses, environment variable setup, and testing instructions. It also describes the project’s architecture and data flow.
-Clarity: Highly detailed, technical, and developer-focused, with clear instructions for setup and usage.
-
-
-Frontend README:
-
-Structure: Minimal, with sections for Overview, Installation, Development, Building, Features, Contributing, and License.
-Details: Brief, focusing on basic setup (clone, npm install, run) and high-level features. Lacks detailed technical information (e.g., framework, specific dependencies, or API integration details).
-Clarity: Concise but less informative, assuming familiarity with frontend development workflows.
-
-
-
-Comparison:
-
-The backend README is far more detailed and structured, catering to developers needing to understand the API’s functionality and setup. The frontend README is brief, providing just enough information for basic setup and contribution.
-The backend includes specific examples (e.g., curl commands, JSON responses), while the frontend lacks examples of usage or integration.
-Both include Contributing and License sections with similar instructions (fork, branch, pull request; MIT License).
-
-Integration and Complementary Nature
-
-Backend-Frontend Relationship:
-
-The backend’s API endpoints (e.g., /get_tweets_inspo, /get_tweets_inspo_batch) directly support the frontend’s features like displaying tweets by region, comparing tweets, and summarizing content.
-The frontend’s Mapbox integration likely visualizes tweet locations retrieved from the backend’s location-based search.
-The frontend’s search and autocomplete features may leverage the backend’s semantic search capabilities.
-The backend’s batch processing aligns with the frontend’s ability to compare tweets between regions.
-
-
-Complementary Aspects:
-
-The backend handles data storage (Qdrant), processing (embeddings, LLMs), and delivery (FastAPI), while the frontend focuses on presenting this data in a user-friendly way (maps, search UI).
-The backend’s robust error handling and fallbacks (e.g., OpenAI for Mistral) ensure reliability, which the frontend can rely on for consistent data.
-The frontend’s minimal README suggests it’s tightly coupled to the backend, assuming users will refer to the backend README for detailed API information.
-
-
-
-GitHub Metadata
-
-Backend:
-
-Languages: Dominated by Jupyter Notebook (99.2%), with Python (0.3%), TypeScript (0.5%), and others minimal.
-Activity: 0 stars, 0 watchers, 0 forks, indicating low public engagement.
-Contributors: 3 (littlegod20, collinsyaotse, Cjyyaotse).
-Deployments: 4 (Production, Preview, +2 others).
-
-
-Frontend:
-
-Languages: TypeScript (0.5%), JavaScript (0.0%), CSS (0.0%), suggesting a web-based application.
-Activity: Not detailed in the README (no stars, watchers, or forks mentioned).
-Contributors: Not listed, but likely overlaps with backend contributors (same repository).
-Deployments: Not mentioned.
-
-
-
-Comparison:
-
-Both READMEs indicate the project is in early stages (0 stars/forks), with the backend providing more GitHub metadata.
-The backend’s heavy use of Jupyter Notebook suggests it may include exploratory code or documentation, while the frontend’s TypeScript focus aligns with modern web development.
-
-Suggestions for Improvement
-
-Backend README:
-
-Already comprehensive, but could include a section on integrating with the frontend to clarify the full project workflow.
-Add a diagram of the architecture to visualize the data flow (e.g., FastAPI → Qdrant → LLM).
-
-
-Frontend README:
-
-Expand to include the specific JavaScript framework used (e.g., React, Vue) and key dependencies.
-Add details on how the frontend integrates with the backend API (e.g., example API calls or endpoints used).
-Include screenshots or examples of the UI (e.g., Mapbox map, search interface) to illustrate functionality.
-Clarify deployment instructions (e.g., hosting requirements, environment setup).
-
-
-
-Summary
-
-Backend README: Detailed, technical, and focused on API functionality, data processing, and setup. It provides a robust foundation for tweet analysis and retrieval, with clear instructions for developers.
-Frontend README: Concise, user-focused, and minimal, describing a web interface for visualizing tweet data but lacking technical depth or integration details.
-Relationship: The backend powers the frontend’s features (e.g., maps, tweet comparisons) by providing processed data through API endpoints. They are complementary components of the "Outside The Bot" project.
-Key Difference: The backend README is developer-centric and comprehensive, while the frontend README is brief and high-level, assuming reliance on the backend for core functionality.
-
-This comparison highlights how the two components work together to deliver a full-stack application for tweet analysis and visualization, with the backend handling data and the frontend providing an interactive user experience. If you need a deeper analysis of specific sections or features, let me know!2.8sFastHow can Grok help?
+# Chirpmap: Tweet Visualizer and Analyzer
+
+**Chirpmap** (part of the "Outside The Bot" project) is a full-stack web application designed to analyze and visualize tweets stored in a Qdrant vector database. Users interact with an intuitive global map interface to search for tweets by location (e.g., entering a state, region, or clicking on the map), retrieve semantically relevant results, generate AI-powered summaries of trending topics and conversations, and compare tweet insights across regions. It leverages semantic search, location-based filtering, and large language models (LLMs) like Mistral (with OpenAI fallback) to provide actionable analytics, such as main themes, sentiment, and unique geo-locations. Ideal for researchers, journalists, or anyone exploring social media trends geographically.
+
+This project separates concerns into a robust Python-based backend API for data processing and retrieval, and a modern JavaScript/TypeScript frontend for interactive visualization using Mapbox maps, autocomplete search, and dynamic UI elements.
+
+## Table of Contents
+- [Features](#features)
+- [Architecture](#architecture)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Environment Variables](#environment-variables)
+- [Usage](#usage)
+- [API Endpoints](#api-endpoints)
+- [Project Structure](#project-structure)
+- [Dependencies](#dependencies)
+- [Running Tests](#running-tests)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Features
+### Backend Features
+- **Semantic Search**: Retrieve tweets similar to a query using text embeddings (`BAAI/bge-small-en-v1.5`).
+- **Location-Based Search**: Filter tweets by latitude/longitude with customizable radius.
+- **Hybrid Search**: Combine semantic and location filters for precise results.
+- **LLM Summarization**: Generate structured JSON summaries (e.g., themes, trends) using Mistral or OpenAI fallback.
+- **Static Metrics**: Quick analytics like total tweets and unique locations.
+- **Batch Processing**: Analyze multiple locations in one request for regional comparisons.
+- **Error Handling**: Built-in fallbacks and input validation for reliability.
+
+### Frontend Features
+- **Interactive Map**: Visualize tweet locations worldwide using Mapbox.
+- **Search & Autocomplete**: Enter locations or topics with real-time suggestions.
+- **Regional Analysis**: Display tweets, summaries, and trends for selected areas.
+- **Region Comparison**: Side-by-side insights between locations.
+- **Modal Previews**: Browse available tweet locations before querying.
+
+The backend powers the frontend's data needs, enabling seamless hybrid searches and visualizations.
+
+## Architecture
+The system integrates:
+- **Backend (FastAPI)**: Handles API requests, queries Qdrant for embeddings/metadata, generates embeddings with FastEmbed, and prompts LLMs for summaries.
+- **Database (Qdrant)**: Stores tweet vectors, text, and geospatial data (lat/long).
+- **Embeddings (FastEmbed)**: Uses `BAAI/bge-small-en-v1.5` for semantic similarity.
+- **LLMs**: Mistral for primary summaries; OpenAI (gpt-4o-mini) as fallback.
+- **Geocoding (Geopy)**: Optional reverse lookup for coordinates to place names.
+- **Frontend (React)**: Consumes backend API for map rendering, search, and UI interactions.
+
+**Data Flow**:
+1. Tweets stored in Qdrant with embeddings and geo-data.
+2. Frontend sends queries to backend API.
+3. Backend performs hybrid search, summarizes via LLM, and returns JSON.
+4. Frontend renders maps, lists, and comparisons.
+
+For a visual diagram, see [architecture.md](architecture.md) (if added in future updates).
+
+## Prerequisites
+- **Python 3.8+** (for backend).
+- **Node.js 18+ and npm** (for frontend; download from [nodejs.org](https://nodejs.org)).
+- **Qdrant Server**: Run locally (via Docker) or use Qdrant Cloud.
+- **API Keys**: For Mistral, OpenAI, and Qdrant.
+- **Git**: For cloning the repo.
+- **Docker** (optional, for Qdrant setup).
+
+These instructions work across **Windows**, **macOS**, and **Linux**. Use Command Prompt/PowerShell on Windows, Terminal on macOS/Linux. For virtual environments, use `venv` on all OSes.
+
+
+## Installation
+1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/Cjyyaotse/outside_the_bot.git
+   cd outside_the_bot
+   ```
+
+2. **Backend Setup (OTB_AI Directory)**:
+   ```bash
+   cd OTB_AI
+   ```
+   - Create a virtual environment:
+     - **Linux/macOS**:
+       ```bash
+       python -m venv venv
+       source venv/bin/activate
+       ```
+     - **Windows**:
+       ```bash
+       python -m venv venv
+       venv\Scripts\activate
+       ```
+   - Install dependencies:
+     ```bash
+     pip install -r requirements.txt
+     ```
+
+3. **Frontend Setup (OTB_frontend Directory)**:
+   ```bash
+   cd ../OTB_frontend
+   npm install
+   ```
+
+4. **Set Up Environment Variables** (Both Backend and Frontend):
+   - **Backend**: Copy `OTB_AI/example.env` to `OTB_AI/.env` and edit:
+     ```env
+     MISTRAL_API_KEY=your_mistral_api_key
+     QDRANT_API_KEY=your_qdrant_api_key
+     QDRANT_URL=your_qdrant_url  # e.g., http://localhost:6333 for local
+     OPENAI_API_KEY=your_openai_api_key
+     ```
+   - **Frontend**: Copy `OTB_frontend/example.env` to `OTB_frontend/.env` and edit (uses Vite for React):
+     ```env
+     VITE_DEFAULT_PUBLIC_TOKEN=your_public_token_if_needed
+     VITE_MISTRAL_API_KEY=your_mistral_api_key
+     VITE_QDRANT_API_KEY=your_qdrant_api_key
+     VITE_QDRANT_URL=your_qdrant_url
+     VITE_OPENAI_API_KEY=your_openai_api_key
+     ```
+     *Note*: Prefix with `VITE_` for frontend exposure. Restart dev server after changes.
+
+## Usage
+1. **Start the Backend**:
+   From `OTB_AI`:
+   ```bash
+   uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+   ```
+   API ready at `http://localhost:8000`. Test with `/docs` for Swagger UI.
+
+2. **Start the Frontend**:
+   From `OTB_frontend`:
+   ```bash
+   npm run dev
+   ```
+   App runs at `http://localhost:5173`. Ensure backend is running first.
+
+3. **Interact with the App**:
+   - Open `http://localhost:5173` in your browser.
+   - Use the modal to preview locations with tweets.
+   - Search by location name (autocomplete helps), set radius/topic if desired, and click "Analyze Region".
+   - Click the map for precise coordinates.
+   - Compare regions via the comparison tool for side-by-side summaries.
+   - If no tweets found, a message displays.
+
+For production: Build frontend (`npm run build`) and serve static files; deploy backend via Uvicorn/Gunicorn.
+
+## API Endpoints
+Access full docs at `http://localhost:8000/docs`.
+
+| Endpoint | Method | Description | Example Request |
+|----------|--------|-------------|-----------------|
+| `/` | GET | Health check | `curl http://localhost:8000/` |
+| `/get_tweets_inspo` | POST | Semantic/location search | `curl -X POST http://localhost:8000/get_tweets_inspo -H "Content-Type: application/json" -d '{"query": "climate change", "lat": 37.7749, "long": -122.4194, "radius": 10}'` |
+| `/get_tweets_inspo_batch` | POST | Batch search for multiple locations | Similar to above, but with `locations` array |
+| `/static_metrics` | GET | Total tweets and unique locations | `curl http://localhost:8000/static_metrics` |
+
+Responses: JSON with tweets, summaries, and metrics.
+
+## Project Structure
+```
+outside_the_bot/
+├── OTB_AI/                 # Backend
+│   ├── app.py              # FastAPI app
+│   ├── requirements.txt    # Python deps
+│   ├── example.env         # Env template
+│   └── ...                 # Models, utils, etc.
+├── OTB_frontend/           # Frontend
+│   ├── src/                # React components (Map, Search, etc.)
+│   ├── package.json        # npm deps
+│   ├── example.env         # Env template
+│   └── ...                 # Assets, vite.config.js
+├── README.md               # This file
+└── LICENSE
+```
+
+## Dependencies
+### Backend
+See `OTB_AI/requirements.txt`:
+- `fastapi`, `uvicorn`
+- `qdrant-client`, `fastembed`
+- `mistralai`, `langchain-openai`
+- `python-dotenv`, `pydantic`, `geopy`, `numpy`
+
+### Frontend
+See `OTB_frontend/package.json`:
+- `react`, `vite`
+- `@mapbox/mapbox-gl-geocoder` (for search/map)
+- `axios` (for API calls)
+- UI libs (e.g., for modals/comparisons)
+
+## Contributing
+We welcome contributions!
+1. Fork the repo.
+2. Create a feature branch: `git checkout -b feature/your-feature`.
+3. Commit changes: `git commit -m "Add your feature"`.
+4. Push: `git push origin feature/your-feature`.
+5. Open a Pull Request.
+
+Follow PEP 8 for Python; use ESLint/Prettier for JS. Discuss major changes via issues.
+
+## License
+MIT License. See [LICENSE](LICENSE) for details.
