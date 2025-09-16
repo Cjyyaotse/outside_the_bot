@@ -185,6 +185,9 @@ See `OTB_frontend/package.json`:
 - `axios` (for API calls)
 - UI libs (e.g., for modals/comparisons)
 
+## Documentation
+For detailed documentation check "Outside_The_Bot_Project_Documentation_.docx" in the root project Directory
+
 ## Contributing
 We welcome contributions!
 1. Fork the repo.
